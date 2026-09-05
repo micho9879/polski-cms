@@ -3,39 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <title>Panel Administratora</title>
   </head>
   <body>
-    <script src="https://unpkg.com/decap-cms@^3.1.2/dist/decap-cms.js"></script>
-    <script>
-      CMS.init({
-        config: {
-          backend: {
-            name: 'github',
-            repo: 'micho9879/polski-cms',
-            branch: 'main',
-            use_pkce: true,
-            app_id: 'Ov23li0ZsiUrwCSnuMxQ'
-          },
-          media_folder: 'public/images',
-          public_folder: '/images',
-          collections: [
-            {
-              name: 'notatki',
-              label: 'Notatki dla uczniów',
-              folder: 'public/data/notatki',
-              create: true,
-              extension: 'json',
-              format: 'json',
-              fields: [
-                { label: 'Tytuł', name: 'title', widget: 'string' },
-                { label: 'Miniaturka', name: 'thumbnail', widget: 'image', required: false },
-                { label: 'Treść', name: 'content', widget: 'markdown' }
-              ]
-            }
-          ]
-        }
-      });
-    </script>
+    <script src="https://unpkg.com/@sveltia/cms/dist/sveltia-cms.js"></script>
   </body>
 </html>
