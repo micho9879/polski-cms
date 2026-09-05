@@ -2,23 +2,22 @@ document.addEventListener("DOMContentLoaded", () => {
     const grid = document.getElementById("posts-grid");
     if (!grid) return;
     
-    // Zamiast sztywnej listy, pobieramy aktualny spis plików bezpośrednio z repozytorium na GitHubie
-    fetch('https://api.github.com/repos/micho9879/polski-cms/contents/public/data/notatki')
+    // Dodajemy unikalny znacznik czasu, aby całkowicie oszukać pamięć podręczną (cache) przeglądarki i GitHuba
+    const cacheBuster = new Date().getTime();
+
+    // Pobieramy listę plików, wymuszając brak cache
+    fetch(`https://api.github.com/repos/micho9879/polski-cms/contents/public/data/notatki?t=${cacheBuster}`, { cache: 'no-store' })
         .then(response => {
             if (!response.ok) throw new Error("Błąd pobierania listy plików z GitHuba");
             return response.json();
         })
         .then(files => {
-            // Filtrujemy, żeby przetwarzać tylko pliki JSON
             const jsonFiles = files.filter(f => f.name.endsWith('.json'));
-            
-            // Czyścimy ew. stare dane
             grid.innerHTML = "";
 
             jsonFiles.forEach(fileInfo => {
-                // Używamy download_url, czyli pobieramy surowy tekst pliku bezpośrednio z GitHuba.
-                // Dzięki temu nie musisz wdrażać strony (firebase deploy) za każdym razem, gdy dodasz nowy wpis!
-                fetch(fileInfo.download_url)
+                // Pobieramy surowy tekst pliku, wymuszając najświeższą wersję za pomocą parametru URL
+                fetch(`${fileInfo.download_url}?t=${cacheBuster}`, { cache: 'no-store' })
                     .then(res => res.json())
                     .then(data => {
                         const card = document.createElement("div");
@@ -46,6 +45,6 @@ document.addEventListener("DOMContentLoaded", () => {
         })
         .catch(err => {
             console.error(err);
-            grid.innerHTML = '<p class="text-red-500">Nie udało się wczytać listy notatek z serwera.</p>';
+            grid.innerHTML = '<p class="text-red-500">Wystąpił problem z wczytywaniem najnowszych notatek z GitHuba.</p>';
         });
 });
