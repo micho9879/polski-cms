@@ -5,8 +5,8 @@ backend:
   use_pkce: true
   app_id: Ov23li0ZsiUrwCSnuMxQ
 
-media_folder: "public/uploads"
-public_folder: "/uploads"
+media_folder: "public/images"
+public_folder: "/images"
 
 collections:
   - name: "notatki"
@@ -16,6 +16,6 @@ collections:
     extension: "json"
     format: "json"
     fields:
-      - { label: "Tytuł", name: "title", widget: "string" }
-      - { label: "Miniaturka", name: "thumbnail", widget: "image", required: false }
-      - { label: "Treść", name: "content", widget: "markdown" }
+      - {label: "Tytuł", name: "title", widget: "string"}
+      - {label: "Miniaturka", name: "thumbnail", widget: "image", required: false}
+      - {label: "Treść", name: "content", widget: "markdown"}
