@@ -7,11 +7,19 @@
     <title>Panel Administratora</title>
   </head>
   <body>
-    <!-- Wracamy do Decap CMS. To on natywnie obsługuje GitHub PKCE bez serwerów pośredniczących. -->
+    <!-- 1. Musimy zablokować automatyczny start CMSa zanim załadujemy skrypt -->
+    <script>
+      window.CMS_MANUAL_INIT = true;
+    </script>
+    
+    <!-- 2. Ładujemy skrypt -->
     <script src="https://unpkg.com/decap-cms@^3.1.2/dist/decap-cms.js"></script>
+    
+    <!-- 3. Odpalamy go ręcznie z flagą wyłączającą config.yml -->
     <script>
       CMS.init({
         config: {
+          load_config_file: false,
           backend: {
             name: 'github',
             repo: 'micho9879/polski-cms',
