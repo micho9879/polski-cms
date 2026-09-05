@@ -4,18 +4,17 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <title>Panel Administratora</title>
+    <title>Panel Administratora - Sveltia CMS</title>
   </head>
   <body>
-    <!-- 1. Musimy zablokować automatyczny start CMSa zanim załadujemy skrypt -->
     <script>
+      // Blokada wczytywania ewentualnych starych plików konfiguracyjnych z cache
       window.CMS_MANUAL_INIT = true;
     </script>
     
-    <!-- 2. Ładujemy skrypt -->
-    <script src="https://unpkg.com/decap-cms@^3.1.2/dist/decap-cms.js"></script>
+    <!-- Ładujemy Sveltia CMS -->
+    <script src="https://unpkg.com/@sveltia/cms/dist/sveltia-cms.js"></script>
     
-    <!-- 3. Odpalamy go ręcznie z flagą wyłączającą config.yml -->
     <script>
       CMS.init({
         config: {
@@ -23,9 +22,8 @@
           backend: {
             name: 'github',
             repo: 'micho9879/polski-cms',
-            branch: 'main',
-            use_pkce: true,
-            app_id: 'Ov23li0ZsiUrwCSnuMxQ'
+            branch: 'main'
+            // Oczyszczono z use_pkce i app_id
           },
           media_folder: 'public/images',
           public_folder: '/images',
