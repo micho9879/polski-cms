@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Materiały do języka polskiego</title>
+    <!-- Tailwind CSS z pluginem typography (do ładnego renderowania markdownu) -->
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+    <!-- Biblioteka marked.js do konwersji Markdown na HTML -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col">
+    <!-- Hero Section (Nowoczesny Gradient) -->
+    <header class="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-800 shadow-lg text-white">
+        <div class="max-w-7xl mx-auto py-20 px-4 sm:px-6 lg:px-8 text-center">
+            <h1 class="text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl text-white">
+                Materiały do języka polskiego
+            </h1>
+            <p class="mt-6 max-w-2xl text-xl text-indigo-100 mx-auto">
+                Notatki, opracowania lektur i pomoce naukowe dla uczniów.
+            </p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8 flex-grow w-full">
+        <!-- Widok główny z kafelkami -->
+        <div id="home-view">
+            <h2 class="text-3xl font-bold text-gray-900 mb-10 text-center">Najnowsze wpisy</h2>
+            <div id="posts-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                <!-- Kafelki będą renderowane tutaj przez app.js -->
+            </div>
+        </div>
+
+        <!-- Widok pełnego artykułu (SPA - domyślnie ukryty) -->
+        <div id="article-view" class="hidden">
+            <!-- Treść artykułu będzie renderowana tutaj -->
+        </div>
+    </main>
+
+    <footer class="bg-white border-t border-gray-200 mt-auto py-8">
+        <p class="text-center text-gray-500">&copy; 2026 Nauczyciel Języka Polskiego. Wszelkie prawa zastrzeżone.</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
