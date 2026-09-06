@@ -1,0 +1,17 @@
+{
+  "name": "Materiały do języka polskiego",
+  "short_name": "Polski CMS",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1e293b",
+  "description": "Baza wiedzy, opracowania lektur i repetytorium gramatyczne z języka polskiego.",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3389/3389081.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
