@@ -123,7 +123,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const htmlContent = marked.parse(post.content || '');
 
         articleContent.innerHTML = `
-            <div class="max-w-3xl mx-auto px-4 sm:px-6">
+            <div class="max-w-4xl mx-auto bg-white p-8 sm:p-12 md:p-16 rounded-[2rem] shadow-sm border border-slate-200 mt-6 sm:mt-10 mb-20 relative z-10">
                 <header class="mb-10 text-center">
                     <span class="text-sm font-semibold text-slate-500 uppercase tracking-wider">${categoryName}</span>
                     <h1 class="text-4xl md:text-5xl font-bold font-serif text-slate-900 mt-4 mb-6 leading-tight">${post.title}</h1>
@@ -133,11 +133,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     </div>
                 </header>
                 
-                <figure class="mb-12 rounded-2xl overflow-hidden border border-slate-200">
-                    <img src="${imageUrl}" alt="${post.title}" class="w-full h-auto object-cover max-h-[400px]">
+                <figure class="mb-12 rounded-2xl overflow-hidden border border-slate-100 bg-slate-50">
+                    <img src="${imageUrl}" alt="${post.title}" class="w-full h-auto max-h-[500px] object-cover mx-auto block">
                 </figure>
                 
-                <div class="prose prose-slate prose-lg max-w-none font-serif leading-relaxed prose-headings:font-sans prose-headings:font-bold prose-a:text-slate-900">
+                <div class="prose prose-slate prose-lg md:prose-xl mx-auto max-w-3xl font-serif leading-relaxed prose-headings:font-sans prose-headings:font-bold prose-a:text-slate-900">
                     ${htmlContent}
                 </div>
             </div>
