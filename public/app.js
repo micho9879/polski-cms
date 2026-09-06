@@ -29,17 +29,24 @@ document.addEventListener("DOMContentLoaded", () => {
             
             const fetchPromises = jsonFiles.map(fileInfo => 
                 fetch(fileInfo.download_url)
-                    .then(r => r.ok ? r.json() : null)
+                    .then(r => {
+                        // Ochrona przed błędem 404 (Zombie plików usuniętych z Firebase)
+                        if (!r.ok || r.status === 404) {
+                            console.warn(`Zignorowano brakujący/uszkodzony plik: ${fileInfo.name}`);
+                            return null;
+                        }
+                        return r.json();
+                    })
                     .catch(err => {
-                        console.error(`Błąd pobierania ${fileInfo.name}:`, err);
-                        return null; // Zignoruj błędy pojedynczego pliku
+                        console.error(`Krytyczny błąd pobierania pliku ${fileInfo.name}:`, err);
+                        return null; // Bezpieczny fallback zapobiegający blokadzie pętli
                     })
             );
 
             Promise.all(fetchPromises)
                 .then(posts => {
-                    // Filtrowanie uszkodzonych plików
-                    allPosts = posts.filter(post => post !== null && post.title);
+                    // Czysta lista z pominieciem nullów wygenerowanych przez 404
+                    allPosts = posts.filter(post => post !== null && post && post.title);
                     renderTabs(allPosts);
                     renderInitialGrid(allPosts);
                 });

@@ -1,5 +1,4 @@
-const CACHE_NAME = 'polski-pwa-v4';
-const DYNAMIC_CACHE = 'polski-dynamic-v4';
+const CACHE_NAME = 'polski-pwa-v5';
 
 self.addEventListener('install', event => {
   self.skipWaiting();
@@ -8,11 +7,7 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys => Promise.all(
-      keys.map(key => {
-        if (![CACHE_NAME, DYNAMIC_CACHE].includes(key)) {
-          return caches.delete(key);
-        }
-      })
+      keys.map(key => caches.delete(key)) // Zabijamy zombie: czyszczenie WSZYSTKICH starych cache bez wyjątku
     ))
   );
   self.clients.claim();
@@ -21,7 +16,7 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
 
-  // ZAPYTANIA O HTML I JSON: Strategia Stale-While-Revalidate
+  // ZAPYTANIA O HTML I JSON: Strategia Network Only
   if (
     url.pathname === '/' ||
     url.pathname.endsWith('index.html') ||
@@ -29,21 +24,7 @@ self.addEventListener('fetch', event => {
     url.hostname === 'api.github.com' ||
     url.hostname === 'raw.githubusercontent.com'
   ) {
-    event.respondWith(
-      caches.open(DYNAMIC_CACHE).then(cache => {
-        return cache.match(event.request).then(cachedResponse => {
-          const fetchPromise = fetch(event.request).then(networkResponse => {
-            // Zapisz odpowiedź do cache jeśli jest prawidłowa
-            if (networkResponse && networkResponse.status === 200) {
-              cache.put(event.request, networkResponse.clone());
-            }
-            return networkResponse;
-          }).catch(() => cachedResponse);
-          
-          return cachedResponse || fetchPromise;
-        });
-      })
-    );
+    event.respondWith(fetch(event.request));
     return;
   }
 
