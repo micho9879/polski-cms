@@ -145,8 +145,7 @@ document.addEventListener("DOMContentLoaded", () => {
             card.dataset.category = categoryName;
             card.dataset.search = (post.title + " " + (post.content || '')).toLowerCase();
             
-            card.className = "fade-in bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 transition-all cursor-pointer flex flex-col overflow-hidden hover:shadow-md dark:hover:border-slate-700";
-            card.style.animationDelay = `${index * 0.05}s`;
+            card.className = "bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 transition-all cursor-pointer flex flex-col overflow-hidden hover:shadow-md dark:hover:border-slate-700";
             
             const imageUrl = post.thumbnail || 'https://images.unsplash.com/photo-1456953180671-730de08edaa7?auto=format&fit=crop&q=80&w=600&h=400';
             
