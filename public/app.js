@@ -21,6 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Pobieranie danych (Wspierane przez ETagi i Service Worker)
     fetch(`https://api.github.com/repos/micho9879/polski-cms/contents/public/data/notatki`, { cache: 'no-cache' })
         .then(res => {
+            if (res.status === 403) throw new Error("API 403");
             if (!res.ok) throw new Error("Brak dostępu do API GitHuba.");
             return res.json();
         })
@@ -55,10 +56,16 @@ document.addEventListener("DOMContentLoaded", () => {
         })
         .catch(err => {
             console.error("Błąd krytyczny:", err);
+            
+            let errorMsg = "Nie udało się załadować danych. Odśwież stronę.";
+            if (err.message.includes("403") || err.message.includes("API")) {
+                errorMsg = "Przekroczono limit zapytań do API GitHuba (60/godzinę). Blokada zniknie za chwilę. Spróbuj zmienić IP (np. na sieć komórkową), aby testować dalej.";
+            }
+
             postsGrid.innerHTML = `
                 <div class="col-span-full p-8 text-center bg-red-50 dark:bg-red-900/20 rounded-2xl border border-red-200 dark:border-red-800">
-                    <h3 class="text-red-700 dark:text-red-400 font-bold mb-2">Błąd połączenia z bazą wpisów</h3>
-                    <p class="text-red-600 dark:text-red-500 text-sm">Nie udało się załadować danych. Odśwież stronę.</p>
+                    <h3 class="text-red-700 dark:text-red-400 font-bold mb-2">Blokada Antyspamowa GitHuba</h3>
+                    <p class="text-red-600 dark:text-red-500 text-sm max-w-lg mx-auto">${errorMsg}</p>
                 </div>
             `;
         });
