@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initTheme();
 
     // Pobieranie danych (Wspierane przez ETagi i Service Worker)
-    fetch(`https://api.github.com/repos/micho9879/polski-cms/contents/public/data/notatki`)
+    fetch(`https://api.github.com/repos/micho9879/polski-cms/contents/public/data/notatki`, { cache: 'no-cache' })
         .then(res => {
             if (!res.ok) throw new Error("Brak dostępu do API GitHuba.");
             return res.json();
@@ -28,7 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const jsonFiles = Array.isArray(files) ? files.filter(f => f.name.endsWith('.json')) : [];
             
             const fetchPromises = jsonFiles.map(fileInfo => 
-                fetch(fileInfo.download_url)
+                fetch(fileInfo.download_url, { cache: 'no-cache' })
                     .then(r => {
                         // Ochrona przed błędem 404 (Zombie plików usuniętych z Firebase)
                         if (!r.ok || r.status === 404) {
