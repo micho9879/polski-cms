@@ -28,12 +28,9 @@ document.addEventListener("DOMContentLoaded", () => {
             const jsonFiles = Array.isArray(files) ? files.filter(f => f.name.endsWith('.json')) : [];
             
             const fetchPromises = jsonFiles.map(fileInfo => 
-                // Zmiana z download_url (który ma 5 min cache po stronie serwerów GitHub CDN)
-                // na bezpośrednie odpytanie API o surowy plik w czasie rzeczywistym
-                fetch(fileInfo.url, { 
-                    headers: { 'Accept': 'application/vnd.github.v3.raw' },
-                    cache: 'no-cache' 
-                })
+                // Używamy raw.githubusercontent.com aby nie zużywać limitu zapytań API (60/godzinę)
+                // Dodajemy fileInfo.sha (unikalny hash wersji pliku z GitHuba), aby ZAWSZE omijać 5-minutowy cache CDN po edycji!
+                fetch(`${fileInfo.download_url}?v=${fileInfo.sha}`, { cache: 'no-cache' })
                     .then(r => {
                         // Ochrona przed błędem 404 (Zombie plików usuniętych z Firebase)
                         if (!r.ok || r.status === 404) {
