@@ -4,21 +4,65 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Materiały do języka polskiego</title>
-    <!-- Tailwind CSS z pluginem typography (do ładnego renderowania markdownu) -->
+    <!-- Google Fonts: Merriweather for article content, Inter for UI -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS z pluginem typography -->
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Merriweather', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
     <!-- Biblioteka marked.js do konwersji Markdown na HTML -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        /* Dodatkowe animacje */
+        .fade-in-up { animation: fadeInUp 0.5s ease-out forwards; }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Pattern dla Hero Section - Mesh Gradient */
+        .hero-pattern {
+            background-color: #4f46e5;
+            background-image: radial-gradient(at 40% 20%, hsla(280,100%,74%,1) 0px, transparent 50%),
+                              radial-gradient(at 80% 0%, hsla(189,100%,56%,1) 0px, transparent 50%),
+                              radial-gradient(at 0% 50%, hsla(355,100%,93%,1) 0px, transparent 50%);
+        }
+    </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col">
-    <!-- Hero Section (Nowoczesny Gradient) -->
-    <header class="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-800 shadow-lg text-white">
-        <div class="max-w-7xl mx-auto py-20 px-4 sm:px-6 lg:px-8 text-center">
-            <h1 class="text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl text-white">
+    
+    <!-- Nowoczesny Hero Section (Mesh Gradient) -->
+    <header class="hero-pattern shadow-xl text-white relative overflow-hidden">
+        <div class="absolute inset-0 bg-black opacity-10"></div>
+        <div class="relative max-w-7xl mx-auto py-24 px-4 sm:px-6 lg:px-8 text-center">
+            <h1 class="text-5xl font-extrabold tracking-tight sm:text-6xl lg:text-7xl text-white drop-shadow-md">
                 Materiały do języka polskiego
             </h1>
-            <p class="mt-6 max-w-2xl text-xl text-indigo-100 mx-auto">
-                Notatki, opracowania lektur i pomoce naukowe dla uczniów.
+            <p class="mt-6 max-w-2xl text-xl text-indigo-50 mx-auto font-medium drop-shadow-sm">
+                Baza wiedzy, opracowania lektur i repetytorium gramatyczne.
             </p>
+            
+            <!-- Wyszukiwarka -->
+            <div class="mt-10 max-w-xl mx-auto relative">
+                <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                    <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                </div>
+                <input type="text" id="search-input" class="block w-full pl-14 pr-4 py-4 rounded-full border-0 shadow-2xl ring-1 ring-inset ring-white/20 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-white sm:text-lg sm:leading-6 text-gray-900 bg-white/95 backdrop-blur-md transition-all outline-none" placeholder="Szukaj notatki, lektury, motywu...">
+            </div>
         </div>
     </header>
 
@@ -26,9 +70,21 @@
     <main class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8 flex-grow w-full">
         <!-- Widok główny z kafelkami -->
         <div id="home-view">
-            <h2 class="text-3xl font-bold text-gray-900 mb-10 text-center">Najnowsze wpisy</h2>
+            <!-- Dynamiczne zakładki kategorii -->
+            <div class="mb-12">
+                <nav id="category-tabs" class="flex flex-wrap justify-center gap-3" aria-label="Tabs">
+                    <!-- Zakładki wygeneruje app.js -->
+                </nav>
+            </div>
+            
             <div id="posts-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
                 <!-- Kafelki będą renderowane tutaj przez app.js -->
+            </div>
+            
+            <div id="no-results" class="hidden text-center py-20">
+                <svg class="mx-auto h-16 w-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <h3 class="text-xl font-medium text-gray-900">Brak wyników</h3>
+                <p class="mt-1 text-gray-500">Spróbuj wpisać inne słowo kluczowe lub wybierz inną kategorię.</p>
             </div>
         </div>
 
@@ -38,8 +94,8 @@
         </div>
     </main>
 
-    <footer class="bg-white border-t border-gray-200 mt-auto py-8">
-        <p class="text-center text-gray-500">&copy; 2026 Nauczyciel Języka Polskiego. Wszelkie prawa zastrzeżone.</p>
+    <footer class="bg-white border-t border-gray-100 mt-auto py-10">
+        <p class="text-center text-gray-400 font-medium">&copy; 2026 Nauczyciel Języka Polskiego. Wszelkie prawa zastrzeżone.</p>
     </footer>
 
     <script src="app.js"></script>

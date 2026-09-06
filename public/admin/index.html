@@ -37,6 +37,7 @@
               format: 'json',
               fields: [
                 { label: 'Tytuł', name: 'title', widget: 'string' },
+                { label: 'Kategoria', name: 'category', widget: 'select', options: ['Lektury', 'Gramatyka', 'Matura', 'Inne'], default: 'Inne' },
                 { label: 'Miniaturka', name: 'thumbnail', widget: 'image', required: false },
                 { label: 'Treść', name: 'content', widget: 'markdown' }
               ]
