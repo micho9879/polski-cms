@@ -28,7 +28,12 @@ document.addEventListener("DOMContentLoaded", () => {
             const jsonFiles = Array.isArray(files) ? files.filter(f => f.name.endsWith('.json')) : [];
             
             const fetchPromises = jsonFiles.map(fileInfo => 
-                fetch(fileInfo.download_url, { cache: 'no-cache' })
+                // Zmiana z download_url (który ma 5 min cache po stronie serwerów GitHub CDN)
+                // na bezpośrednie odpytanie API o surowy plik w czasie rzeczywistym
+                fetch(fileInfo.url, { 
+                    headers: { 'Accept': 'application/vnd.github.v3.raw' },
+                    cache: 'no-cache' 
+                })
                     .then(r => {
                         // Ochrona przed błędem 404 (Zombie plików usuniętych z Firebase)
                         if (!r.ok || r.status === 404) {
