@@ -172,8 +172,16 @@ document.addEventListener("DOMContentLoaded", () => {
         fetchDataForLevel(level);
     }
 
+    let lastFetchedLevel = '';
+
     function fetchDataForLevel(level) {
-        // Zmieniono folder na notatki_podstawa lub notatki_rozszerzenie
+        // Zabezpieczenie przed limitem: Jeśli notatki są już w pamięci, nie męczymy API
+        if (lastFetchedLevel === level && allPosts.length > 0) {
+            renderTabs(allPosts);
+            renderInitialGrid(allPosts);
+            return;
+        }
+
         const folder = level === 'Podstawa' ? 'notatki_podstawa' : 'notatki_rozszerzenie';
         
         fetch(`https://api.github.com/repos/micho9879/polski-cms/contents/public/data/${folder}`, { cache: 'no-cache' })
@@ -194,12 +202,13 @@ document.addEventListener("DOMContentLoaded", () => {
             })
             .then(posts => {
                 allPosts = posts.filter(post => post !== null && post && post.title);
+                lastFetchedLevel = level; // Zapisz info, że ten poziom jest już zbuforowany
                 renderTabs(allPosts);
                 renderInitialGrid(allPosts);
             })
             .catch(err => {
                 if (postsGrid) {
-                    postsGrid.innerHTML = `<div class="col-span-full p-8 text-center text-red-500">Nie udało się załadować notatek. Prawdopodobnie wyczerpano limit API GitHuba (60/h) lub folder jest pusty.</div>`;
+                    postsGrid.innerHTML = `<div class="col-span-full p-8 text-center text-red-500 font-medium">Nie udało się załadować notatek. Prawdopodobnie wyczerpano limit API GitHuba (60/h) lub folder w CMS jest jeszcze pusty.</div>`;
                 }
             });
     }
