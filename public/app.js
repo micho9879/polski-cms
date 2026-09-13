@@ -1,5 +1,14 @@
 document.addEventListener("DOMContentLoaded", () => {
     // Referencje DOM
+    const loginView = document.getElementById("login-view");
+    const levelSelection = document.getElementById("level-selection");
+    const passwordForm = document.getElementById("password-form");
+    const passwordInput = document.getElementById("password-input");
+    const passwordTitle = document.getElementById("password-title");
+    const submitLoginBtn = document.getElementById("submit-login-btn");
+    const cancelLoginBtn = document.getElementById("cancel-login-btn");
+    const loginError = document.getElementById("login-error");
+
     const homeView = document.getElementById("home-view");
     const postsGrid = document.getElementById("posts-grid");
     const articleView = document.getElementById("article-view");
@@ -8,74 +17,190 @@ document.addEventListener("DOMContentLoaded", () => {
     const searchInput = document.getElementById("search-input");
     const noResults = document.getElementById("no-results");
     const backBtn = document.getElementById("back-btn");
-    
-    if (!postsGrid) return;
+    const heroTitle = document.getElementById("hero-title");
+    const heroSubtitle = document.getElementById("hero-subtitle");
     
     // Zmienne stanu
     let allPosts = [];
     let activeCategory = 'Wszystkie';
+    let currentLevel = ''; // 'Podstawa' lub 'Rozszerzenie'
+    let settingsData = null; // Przechowuje hasła z GitHuba
 
     // Inicjalizacja Dark Mode
     initTheme();
 
-    // Pobieranie danych (Wspierane przez ETagi i Service Worker)
-    fetch(`https://api.github.com/repos/micho9879/polski-cms/contents/public/data/notatki`, { cache: 'no-cache' })
-        .then(res => {
-            if (res.status === 403) throw new Error("API 403");
-            if (!res.ok) throw new Error("Brak dostępu do API GitHuba.");
-            return res.json();
-        })
-        .then(files => {
-            const jsonFiles = Array.isArray(files) ? files.filter(f => f.name.endsWith('.json')) : [];
+    // 1. Obsługa wyboru poziomu (Ekran powitalny)
+    const levelBtns = document.querySelectorAll('.level-btn');
+    levelBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            currentLevel = btn.dataset.level;
             
-            const fetchPromises = jsonFiles.map(fileInfo => 
-                // Używamy raw.githubusercontent.com aby nie zużywać limitu zapytań API (60/godzinę)
-                // Dodajemy fileInfo.sha (unikalny hash wersji pliku z GitHuba), aby ZAWSZE omijać 5-minutowy cache CDN po edycji!
-                fetch(`${fileInfo.download_url}?v=${fileInfo.sha}`, { cache: 'no-cache' })
-                    .then(r => {
-                        // Ochrona przed błędem 404 (Zombie plików usuniętych z Firebase)
-                        if (!r.ok || r.status === 404) {
-                            console.warn(`Zignorowano brakujący/uszkodzony plik: ${fileInfo.name}`);
-                            return null;
-                        }
-                        return r.json();
-                    })
-                    .catch(err => {
-                        console.error(`Krytyczny błąd pobierania pliku ${fileInfo.name}:`, err);
-                        return null; // Bezpieczny fallback zapobiegający blokadzie pętli
-                    })
-            );
-
-            Promise.all(fetchPromises)
-                .then(posts => {
-                    // Czysta lista z pominieciem nullów wygenerowanych przez 404
-                    allPosts = posts.filter(post => post !== null && post && post.title);
-                    renderTabs(allPosts);
-                    renderInitialGrid(allPosts);
-                });
-        })
-        .catch(err => {
-            console.error("Błąd krytyczny:", err);
-            
-            let errorMsg = "Nie udało się załadować danych. Odśwież stronę.";
-            if (err.message.includes("403") || err.message.includes("API")) {
-                errorMsg = "Przekroczono limit zapytań do API GitHuba (60/godzinę). Blokada zniknie za chwilę. Spróbuj zmienić IP (np. na sieć komórkową), aby testować dalej.";
+            // Sprawdź czy użytkownik jest już zalogowany w tej sesji na dany poziom
+            if (sessionStorage.getItem(`auth_${currentLevel}`) === 'true') {
+                loadAppForLevel();
+            } else {
+                // Pokaż formularz hasła
+                levelSelection.classList.add('hidden');
+                passwordForm.classList.remove('hidden');
+                passwordTitle.textContent = `Hasło: Matura ${currentLevel}`;
+                passwordInput.value = '';
+                passwordInput.focus();
+                loginError.classList.add('hidden');
             }
-
-            postsGrid.innerHTML = `
-                <div class="col-span-full p-8 text-center bg-red-50 dark:bg-red-900/20 rounded-2xl border border-red-200 dark:border-red-800">
-                    <h3 class="text-red-700 dark:text-red-400 font-bold mb-2">Blokada Antyspamowa GitHuba</h3>
-                    <p class="text-red-600 dark:text-red-500 text-sm max-w-lg mx-auto">${errorMsg}</p>
-                </div>
-            `;
         });
+    });
+
+    cancelLoginBtn.addEventListener('click', () => {
+        passwordForm.classList.add('hidden');
+        levelSelection.classList.remove('hidden');
+        passwordInput.value = '';
+        loginError.classList.add('hidden');
+    });
+
+    // 2. Walidacja hasła
+    submitLoginBtn.addEventListener('click', verifyPassword);
+    passwordInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') verifyPassword();
+    });
+
+    function verifyPassword() {
+        const enteredPassword = passwordInput.value.trim();
+        if (!enteredPassword) return;
+
+        submitLoginBtn.textContent = 'Sprawdzam...';
+        submitLoginBtn.disabled = true;
+
+        // Jeśli ustawienia (hasła) nie zostały jeszcze pobrane, pobierz je
+        if (!settingsData) {
+            fetchSettingsAndVerify(enteredPassword);
+        } else {
+            checkPassword(enteredPassword);
+        }
+    }
+
+    function fetchSettingsAndVerify(enteredPassword) {
+        // Zawsze pobieramy surowy plik ustawień omijając cache
+        fetch(`https://api.github.com/repos/micho9879/polski-cms/contents/public/data/settings.json`, { cache: 'no-cache' })
+            .then(res => {
+                if (res.status === 404) return null; // Brak pliku ustawień - brak hasła?
+                if (!res.ok) throw new Error("Brak dostępu do API GitHuba.");
+                return res.json();
+            })
+            .then(fileInfo => {
+                if (!fileInfo) {
+                    settingsData = { password_podstawa: "", password_rozszerzenie: "" };
+                    checkPassword(enteredPassword);
+                    return;
+                }
+                return fetch(`${fileInfo.download_url}?v=${fileInfo.sha}`, { cache: 'no-cache' });
+            })
+            .then(res => res ? res.json() : null)
+            .then(settings => {
+                if (settings) {
+                    settingsData = settings;
+                }
+                checkPassword(enteredPassword);
+            })
+            .catch(err => {
+                console.error("Błąd pobierania ustawień:", err);
+                loginError.textContent = "Błąd połączenia. Spróbuj odświeżyć stronę.";
+                loginError.classList.remove('hidden');
+                submitLoginBtn.textContent = 'Wejdź';
+                submitLoginBtn.disabled = false;
+            });
+    }
+
+    function checkPassword(enteredPassword) {
+        let correctPassword = "";
+        if (currentLevel === 'Podstawa') correctPassword = settingsData?.password_podstawa || "";
+        if (currentLevel === 'Rozszerzenie') correctPassword = settingsData?.password_rozszerzenie || "";
+
+        submitLoginBtn.textContent = 'Wejdź';
+        submitLoginBtn.disabled = false;
+
+        // Jeśli hasło w CMS nie zostało ustawione, wpuszczamy bez hasła lub odrzucamy?
+        // Zakładamy, że jeśli hasło jest puste w CMS, wymaga jakiegoś domyślnego, albo odrzuca.
+        // Bezpieczniej weryfikować po prostu zgodność.
+        if (enteredPassword === correctPassword) {
+            sessionStorage.setItem(`auth_${currentLevel}`, 'true');
+            loadAppForLevel();
+        } else {
+            loginError.textContent = "Niepoprawne hasło! Spróbuj ponownie.";
+            loginError.classList.remove('hidden');
+            passwordInput.value = '';
+            passwordInput.focus();
+        }
+    }
+
+    // 3. Ładowanie głównej aplikacji po poprawnej autoryzacji
+    function loadAppForLevel() {
+        loginView.classList.add('hidden');
+        homeView.classList.remove('hidden');
+        
+        // Zmiana tekstów w nagłówku w zależności od wybranego poziomu
+        if (heroTitle) heroTitle.textContent = `Matura ${currentLevel}`;
+        if (heroSubtitle) heroSubtitle.textContent = currentLevel === 'Podstawa' ? 'Baza wiedzy, streszczenia i motywy na egzamin podstawowy.' : 'Zaawansowane analizy, epoki i materiały dla rozszerzenia.';
+
+        fetchData();
+    }
+
+
+    // Pobieranie artykułów (Wspierane przez ETagi)
+    function fetchData() {
+        fetch(`https://api.github.com/repos/micho9879/polski-cms/contents/public/data/notatki`, { cache: 'no-cache' })
+            .then(res => {
+                if (res.status === 403) throw new Error("API 403");
+                if (res.status === 404) return []; // Brak notatek
+                if (!res.ok) throw new Error("Brak dostępu do API GitHuba.");
+                return res.json();
+            })
+            .then(files => {
+                const jsonFiles = Array.isArray(files) ? files.filter(f => f.name.endsWith('.json')) : [];
+                
+                const fetchPromises = jsonFiles.map(fileInfo => 
+                    fetch(`${fileInfo.download_url}?v=${fileInfo.sha}`, { cache: 'no-cache' })
+                        .then(r => {
+                            if (!r.ok || r.status === 404) return null;
+                            return r.json();
+                        })
+                        .catch(err => null)
+                );
+
+                Promise.all(fetchPromises)
+                    .then(posts => {
+                        // Filtrujemy tylko artykuły dla wybranego poziomu
+                        allPosts = posts.filter(post => post !== null && post && post.title && post.poziom === currentLevel);
+                        renderTabs(allPosts);
+                        renderInitialGrid(allPosts);
+                    });
+            })
+            .catch(err => {
+                console.error("Błąd krytyczny:", err);
+                let errorMsg = "Nie udało się załadować danych. Odśwież stronę.";
+                if (err.message.includes("403") || err.message.includes("API")) {
+                    errorMsg = "Przekroczono limit zapytań do API GitHuba (60/godzinę). Blokada zniknie za chwilę.";
+                }
+                if (postsGrid) {
+                    postsGrid.innerHTML = `
+                        <div class="col-span-full p-8 text-center bg-red-50 dark:bg-red-900/20 rounded-2xl border border-red-200 dark:border-red-800">
+                            <h3 class="text-red-700 dark:text-red-400 font-bold mb-2">Blokada Antyspamowa GitHuba</h3>
+                            <p class="text-red-600 dark:text-red-500 text-sm max-w-lg mx-auto">${errorMsg}</p>
+                        </div>
+                    `;
+                }
+            });
+    }
 
     function renderTabs(posts) {
+        if (!categoryTabs) return;
         const categories = new Set();
         categories.add('Wszystkie');
+        // Zaciąganie kategorii dynamicznie z artykułów przypisanych do poziomu
         posts.forEach(post => { if(post.category) categories.add(post.category); });
 
         categoryTabs.innerHTML = "";
+        activeCategory = 'Wszystkie'; // Reset podczas ładowania
+        
         categories.forEach(category => {
             const btn = document.createElement("button");
             btn.textContent = category;
@@ -98,8 +223,8 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Optymalizacja SPA: Zamiast niszczyć DOM, manipulujemy klasą 'hidden' na zrenderowanych kafelkach
     function filterPosts() {
+        if (!searchInput || !postsGrid) return;
         const query = searchInput.value.toLowerCase();
         const children = Array.from(postsGrid.children);
         let visibleCount = 0;
@@ -116,9 +241,9 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
 
-        if (visibleCount === 0) {
+        if (visibleCount === 0 && noResults) {
             noResults.classList.remove('hidden');
-        } else {
+        } else if (noResults) {
             noResults.classList.add('hidden');
         }
     }
@@ -127,20 +252,22 @@ document.addEventListener("DOMContentLoaded", () => {
         searchInput.addEventListener("input", filterPosts);
     }
 
-    // Renderowanie siatki TYLKO RAZ przy inicjalizacji
     function renderInitialGrid(posts) {
+        if (!postsGrid) return;
         postsGrid.innerHTML = "";
         
         if (posts.length === 0) {
             postsGrid.classList.add('hidden');
-            noResults.classList.remove('hidden');
+            if (noResults) noResults.classList.remove('hidden');
             return;
+        } else {
+            postsGrid.classList.remove('hidden');
+            if (noResults) noResults.classList.add('hidden');
         }
 
         posts.forEach((post, index) => {
             const card = document.createElement("article");
             
-            // Atrybuty data dla szybkiego filtrowania w DOM
             const categoryName = post.category || 'Inne';
             card.dataset.category = categoryName;
             card.dataset.search = (post.title + " " + (post.content || '')).toLowerCase();
@@ -173,11 +300,9 @@ document.addEventListener("DOMContentLoaded", () => {
         return `${Math.ceil(words / 200)} min czytania`;
     }
 
-    // Wyświetlanie artykułu bez niszczenia #home-view w DOM
     function showArticle(post, imageUrl, categoryName) {
-        // Sanityzacja zawartości (Bezpieczeństwo XSS)
         const rawHtml = marked.parse(post.content || '');
-        const cleanHtml = DOMPurify.sanitize(rawHtml); // Czysty, bezpieczny HTML
+        const cleanHtml = DOMPurify.sanitize(rawHtml);
 
         articleContent.innerHTML = `
             <div class="max-w-4xl mx-auto bg-white dark:bg-slate-900 p-8 sm:p-12 md:p-16 rounded-[2rem] shadow-sm dark:shadow-none border border-slate-200 dark:border-slate-800 mt-6 sm:mt-10 mb-20 relative z-10 transition-colors duration-300">
@@ -194,7 +319,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     <img src="${imageUrl}" alt="${post.title}" class="w-full h-auto max-h-[500px] object-cover mx-auto block">
                 </figure>
                 
-                <!-- Prose dark mode config -->
                 <div class="prose prose-slate dark:prose-invert prose-lg md:prose-xl mx-auto max-w-3xl font-serif leading-relaxed prose-headings:font-sans prose-headings:font-bold prose-a:text-indigo-600 dark:prose-a:text-indigo-400">
                     ${cleanHtml}
                 </div>
@@ -206,18 +330,14 @@ document.addEventListener("DOMContentLoaded", () => {
         window.scrollTo(0, 0);
     }
 
-    // SPA Powrót do kafelków bez ponownego renderowania!
     if(backBtn) {
         backBtn.addEventListener('click', () => {
             articleView.classList.add('hidden');
             homeView.classList.remove('hidden');
-            
-            // Scroll powrotny do miejsca, w którym była siatka, lub na górę
             window.scrollTo({ top: 0, behavior: 'auto' });
         });
     }
 
-    // --- LOGIKA TRYBU CIEMNEGO ---
     function initTheme() {
         const toggleHome = document.getElementById("theme-toggle-home");
         const toggleArticle = document.getElementById("theme-toggle-article");

@@ -23,11 +23,36 @@
             name: 'github',
             repo: 'micho9879/polski-cms',
             branch: 'main'
-            // Oczyszczono z use_pkce i app_id
           },
           media_folder: 'public/images',
           public_folder: '/images',
           collections: [
+            {
+              name: 'ustawienia',
+              label: 'Ustawienia Strony (Hasła)',
+              files: [
+                {
+                  name: 'hasla',
+                  label: 'Hasła dostępu',
+                  file: 'public/data/settings.json',
+                  fields: [
+                    { label: 'Hasło - Matura Podstawowa', name: 'password_podstawa', widget: 'string', required: true },
+                    { label: 'Hasło - Matura Rozszerzona', name: 'password_rozszerzenie', widget: 'string', required: true }
+                  ]
+                }
+              ]
+            },
+            {
+              name: 'kategorie',
+              label: 'Kategorie Notatek',
+              folder: 'public/data/kategorie',
+              create: true,
+              extension: 'json',
+              format: 'json',
+              fields: [
+                { label: 'Nazwa Kategorii', name: 'title', widget: 'string' }
+              ]
+            },
             {
               name: 'notatki',
               label: 'Notatki dla uczniów',
@@ -37,7 +62,8 @@
               format: 'json',
               fields: [
                 { label: 'Tytuł', name: 'title', widget: 'string' },
-                { label: 'Kategoria', name: 'category', widget: 'select', options: ['Lektury', 'Gramatyka', 'Matura', 'Inne'], default: 'Inne' },
+                { label: 'Poziom', name: 'poziom', widget: 'select', options: ['Podstawa', 'Rozszerzenie'], required: true },
+                { label: 'Kategoria', name: 'category', widget: 'relation', collection: 'kategorie', search_fields: ['title'], value_field: 'title', display_fields: ['title'], required: true },
                 { label: 'Miniaturka', name: 'thumbnail', widget: 'image', required: false },
                 { label: 'Treść', name: 'content', widget: 'markdown' }
               ]

@@ -63,8 +63,55 @@
     
     <!-- Main Content -->
     <main class="flex-grow w-full">
-        <!-- SPA: Główny widok -->
-        <div id="home-view">
+        <!-- SPA: Ekran Wyboru i Logowania -->
+        <div id="login-view" class="pt-20 pb-16 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto text-center flex flex-col items-center justify-center min-h-[70vh]">
+            <h1 class="text-4xl md:text-5xl font-bold font-serif text-slate-900 dark:text-slate-100 tracking-tight leading-tight mb-4">
+                Wybierz swój poziom
+            </h1>
+            <p class="text-lg text-slate-600 dark:text-slate-400 mb-12">
+                Dostęp do materiałów wymaga podania hasła.
+            </p>
+            
+            <div id="login-error" class="hidden w-full max-w-md bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-xl border border-red-200 dark:border-red-800 mb-6 font-medium">
+                Niepoprawne hasło! Spróbuj ponownie.
+            </div>
+
+            <!-- Karty wyboru -->
+            <div id="level-selection" class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl">
+                <!-- Karta Podstawa -->
+                <button data-level="Podstawa" class="level-btn group relative bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-sm hover:shadow-md border border-slate-200 dark:border-slate-700 transition-all text-left overflow-hidden">
+                    <div class="absolute inset-0 bg-indigo-50 dark:bg-indigo-900/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="relative z-10">
+                        <span class="inline-block px-3 py-1 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 text-xs font-bold uppercase tracking-wider rounded-lg mb-4">Matura</span>
+                        <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-2">Poziom Podstawowy</h2>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm">Baza wiedzy, streszczenia i motywy na egzamin podstawowy.</p>
+                    </div>
+                </button>
+                
+                <!-- Karta Rozszerzenie -->
+                <button data-level="Rozszerzenie" class="level-btn group relative bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-sm hover:shadow-md border border-slate-200 dark:border-slate-700 transition-all text-left overflow-hidden">
+                    <div class="absolute inset-0 bg-purple-50 dark:bg-purple-900/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="relative z-10">
+                        <span class="inline-block px-3 py-1 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 text-xs font-bold uppercase tracking-wider rounded-lg mb-4">Matura</span>
+                        <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-2">Poziom Rozszerzony</h2>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm">Zaawansowane analizy, epoki i materiały dla rozszerzenia.</p>
+                    </div>
+                </button>
+            </div>
+
+            <!-- Formularz hasła (domyślnie ukryty) -->
+            <div id="password-form" class="hidden w-full max-w-md bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 fade-in">
+                <h3 id="password-title" class="text-xl font-bold text-slate-900 dark:text-white mb-6">Wpisz hasło dla poziomu</h3>
+                <input type="password" id="password-input" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all mb-4 text-center text-lg" placeholder="••••••••">
+                <div class="flex gap-3">
+                    <button id="cancel-login-btn" class="flex-1 py-3 px-4 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl font-medium hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">Wróć</button>
+                    <button id="submit-login-btn" class="flex-1 py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-colors shadow-sm">Wejdź</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SPA: Główny widok (ukryty za hasłem) -->
+        <div id="home-view" class="hidden">
             <!-- Nowy Hero Section: Clean & Minimalist ze wsparciem Dark Mode -->
             <header class="pt-20 pb-16 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto text-center relative">
                 <!-- Przełącznik Dark Mode -->
@@ -77,10 +124,10 @@
                     </button>
                 </div>
                 
-                <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold font-serif text-slate-900 dark:text-slate-100 tracking-tight leading-tight mt-6">
+                <h1 id="hero-title" class="text-4xl md:text-5xl lg:text-6xl font-bold font-serif text-slate-900 dark:text-slate-100 tracking-tight leading-tight mt-6">
                     Materiały do języka polskiego
                 </h1>
-                <p class="mt-6 text-lg md:text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
+                <p id="hero-subtitle" class="mt-6 text-lg md:text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
                     Baza wiedzy, opracowania lektur i repetytorium.
                 </p>
                 
