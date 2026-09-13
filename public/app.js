@@ -16,30 +16,59 @@ document.addEventListener("DOMContentLoaded", () => {
     const categoryTabs = document.getElementById("category-tabs");
     const searchInput = document.getElementById("search-input");
     const noResults = document.getElementById("no-results");
+    
     const backBtn = document.getElementById("back-btn");
+    const backToLevelsBtn = document.getElementById("back-to-levels-btn");
+    
     const heroTitle = document.getElementById("hero-title");
     const heroSubtitle = document.getElementById("hero-subtitle");
     
     // Zmienne stanu
     let allPosts = [];
     let activeCategory = 'Wszystkie';
-    let currentLevel = ''; // 'Podstawa' lub 'Rozszerzenie'
-    let settingsData = null; // Przechowuje hasła z GitHuba
-
+    let currentLevel = ''; 
+    let settingsData = null;
+    
     // Inicjalizacja Dark Mode
     initTheme();
 
-    // 1. Obsługa wyboru poziomu (Ekran powitalny)
+    // --- ROUTER (Nawigacja wewnątrz SPA oparta o Hash URL) ---
+    window.addEventListener('hashchange', handleRoute);
+    
+    function handleRoute() {
+        const hash = window.location.hash;
+        
+        // Ukrywamy wszystkie widoki na start
+        loginView.classList.add('hidden');
+        homeView.classList.add('hidden');
+        articleView.classList.add('hidden');
+        
+        if (hash.startsWith('#/artykul/')) {
+            const parts = hash.split('/');
+            const level = parts[2]; // Podstawa lub Rozszerzenie
+            const slug = parts[3]; // nazwa pliku bez .json
+            loadArticleRoute(level, slug);
+        } else if (hash === '#/Podstawa' || hash === '#/Rozszerzenie') {
+            const level = hash.replace('#/', '');
+            loadGridRoute(level);
+        } else {
+            // Domyślnie - ekran wyboru
+            loginView.classList.remove('hidden');
+            levelSelection.classList.remove('hidden');
+            passwordForm.classList.add('hidden');
+            currentLevel = '';
+        }
+    }
+
+    // Ekran główny wyboru
     const levelBtns = document.querySelectorAll('.level-btn');
     levelBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-            currentLevel = btn.dataset.level;
-            
-            // Sprawdź czy użytkownik jest już zalogowany w tej sesji na dany poziom
-            if (sessionStorage.getItem(`auth_${currentLevel}`) === 'true') {
-                loadAppForLevel();
+            const level = btn.dataset.level;
+            if (sessionStorage.getItem(`auth_${level}`) === 'true') {
+                window.location.hash = `#/${level}`;
             } else {
-                // Pokaż formularz hasła
+                currentLevel = level;
                 levelSelection.classList.add('hidden');
                 passwordForm.classList.remove('hidden');
                 passwordTitle.textContent = `Hasło: Matura ${currentLevel}`;
@@ -51,13 +80,21 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     cancelLoginBtn.addEventListener('click', () => {
-        passwordForm.classList.add('hidden');
-        levelSelection.classList.remove('hidden');
-        passwordInput.value = '';
-        loginError.classList.add('hidden');
+        window.location.hash = '#/';
+        handleRoute();
     });
 
-    // 2. Walidacja hasła
+    backToLevelsBtn.addEventListener('click', () => {
+        window.location.hash = '#/';
+    });
+
+    if(backBtn) {
+        backBtn.addEventListener('click', () => {
+            window.location.hash = `#/${currentLevel}`;
+        });
+    }
+
+    // Walidacja hasła
     submitLoginBtn.addEventListener('click', verifyPassword);
     passwordInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') verifyPassword();
@@ -70,7 +107,6 @@ document.addEventListener("DOMContentLoaded", () => {
         submitLoginBtn.textContent = 'Sprawdzam...';
         submitLoginBtn.disabled = true;
 
-        // Jeśli ustawienia (hasła) nie zostały jeszcze pobrane, pobierz je
         if (!settingsData) {
             fetchSettingsAndVerify(enteredPassword);
         } else {
@@ -79,31 +115,22 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function fetchSettingsAndVerify(enteredPassword) {
-        // Zawsze pobieramy surowy plik ustawień omijając cache
         fetch(`https://api.github.com/repos/micho9879/polski-cms/contents/public/data/settings.json`, { cache: 'no-cache' })
             .then(res => {
-                if (res.status === 404) return null; // Brak pliku ustawień - brak hasła?
-                if (!res.ok) throw new Error("Brak dostępu do API GitHuba.");
+                if (res.status === 404) return null;
+                if (!res.ok) throw new Error("API Error");
                 return res.json();
             })
             .then(fileInfo => {
-                if (!fileInfo) {
-                    settingsData = { password_podstawa: "", password_rozszerzenie: "" };
-                    checkPassword(enteredPassword);
-                    return;
-                }
-                return fetch(`${fileInfo.download_url}?v=${fileInfo.sha}`, { cache: 'no-cache' });
+                if (!fileInfo) return null;
+                return fetch(`${fileInfo.download_url}?v=${fileInfo.sha}`, { cache: 'no-cache' }).then(r => r.json());
             })
-            .then(res => res ? res.json() : null)
             .then(settings => {
-                if (settings) {
-                    settingsData = settings;
-                }
+                if (settings) settingsData = settings;
                 checkPassword(enteredPassword);
             })
             .catch(err => {
-                console.error("Błąd pobierania ustawień:", err);
-                loginError.textContent = "Błąd połączenia. Spróbuj odświeżyć stronę.";
+                loginError.textContent = "Błąd połączenia. Odśwież stronę.";
                 loginError.classList.remove('hidden');
                 submitLoginBtn.textContent = 'Wejdź';
                 submitLoginBtn.disabled = false;
@@ -118,12 +145,9 @@ document.addEventListener("DOMContentLoaded", () => {
         submitLoginBtn.textContent = 'Wejdź';
         submitLoginBtn.disabled = false;
 
-        // Jeśli hasło w CMS nie zostało ustawione, wpuszczamy bez hasła lub odrzucamy?
-        // Zakładamy, że jeśli hasło jest puste w CMS, wymaga jakiegoś domyślnego, albo odrzuca.
-        // Bezpieczniej weryfikować po prostu zgodność.
         if (enteredPassword === correctPassword) {
             sessionStorage.setItem(`auth_${currentLevel}`, 'true');
-            loadAppForLevel();
+            window.location.hash = `#/${currentLevel}`;
         } else {
             loginError.textContent = "Niepoprawne hasło! Spróbuj ponownie.";
             loginError.classList.remove('hidden');
@@ -132,61 +156,50 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // 3. Ładowanie głównej aplikacji po poprawnej autoryzacji
-    function loadAppForLevel() {
-        loginView.classList.add('hidden');
+    // Ładowanie listy artykułów (Siatka)
+    function loadGridRoute(level) {
+        if (sessionStorage.getItem(`auth_${level}`) !== 'true') {
+            window.location.hash = '#/';
+            return;
+        }
+
+        currentLevel = level;
         homeView.classList.remove('hidden');
         
-        // Zmiana tekstów w nagłówku w zależności od wybranego poziomu
         if (heroTitle) heroTitle.textContent = `Matura ${currentLevel}`;
         if (heroSubtitle) heroSubtitle.textContent = currentLevel === 'Podstawa' ? 'Baza wiedzy, streszczenia i motywy na egzamin podstawowy.' : 'Zaawansowane analizy, epoki i materiały dla rozszerzenia.';
 
-        fetchData();
+        fetchDataForLevel(level);
     }
 
-
-    // Pobieranie artykułów (Wspierane przez ETagi)
-    function fetchData() {
-        fetch(`https://api.github.com/repos/micho9879/polski-cms/contents/public/data/notatki`, { cache: 'no-cache' })
+    function fetchDataForLevel(level) {
+        // Zmieniono folder na notatki_podstawa lub notatki_rozszerzenie
+        const folder = level === 'Podstawa' ? 'notatki_podstawa' : 'notatki_rozszerzenie';
+        
+        fetch(`https://api.github.com/repos/micho9879/polski-cms/contents/public/data/${folder}`, { cache: 'no-cache' })
             .then(res => {
-                if (res.status === 403) throw new Error("API 403");
-                if (res.status === 404) return []; // Brak notatek
-                if (!res.ok) throw new Error("Brak dostępu do API GitHuba.");
+                if (res.status === 404) return [];
+                if (!res.ok) throw new Error("API Error");
                 return res.json();
             })
             .then(files => {
                 const jsonFiles = Array.isArray(files) ? files.filter(f => f.name.endsWith('.json')) : [];
-                
                 const fetchPromises = jsonFiles.map(fileInfo => 
                     fetch(`${fileInfo.download_url}?v=${fileInfo.sha}`, { cache: 'no-cache' })
-                        .then(r => {
-                            if (!r.ok || r.status === 404) return null;
-                            return r.json();
-                        })
-                        .catch(err => null)
+                        .then(r => r.ok ? r.json().then(data => ({...data, slug: fileInfo.name.replace('.json', '')})) : null)
+                        .catch(() => null)
                 );
 
-                Promise.all(fetchPromises)
-                    .then(posts => {
-                        // Filtrujemy tylko artykuły dla wybranego poziomu
-                        allPosts = posts.filter(post => post !== null && post && post.title && post.poziom === currentLevel);
-                        renderTabs(allPosts);
-                        renderInitialGrid(allPosts);
-                    });
+                return Promise.all(fetchPromises);
+            })
+            .then(posts => {
+                allPosts = posts.filter(post => post !== null && post && post.title);
+                renderTabs(allPosts);
+                renderInitialGrid(allPosts);
             })
             .catch(err => {
-                console.error("Błąd krytyczny:", err);
-                let errorMsg = "Nie udało się załadować danych. Odśwież stronę.";
-                if (err.message.includes("403") || err.message.includes("API")) {
-                    errorMsg = "Przekroczono limit zapytań do API GitHuba (60/godzinę). Blokada zniknie za chwilę.";
-                }
                 if (postsGrid) {
-                    postsGrid.innerHTML = `
-                        <div class="col-span-full p-8 text-center bg-red-50 dark:bg-red-900/20 rounded-2xl border border-red-200 dark:border-red-800">
-                            <h3 class="text-red-700 dark:text-red-400 font-bold mb-2">Blokada Antyspamowa GitHuba</h3>
-                            <p class="text-red-600 dark:text-red-500 text-sm max-w-lg mx-auto">${errorMsg}</p>
-                        </div>
-                    `;
+                    postsGrid.innerHTML = `<div class="col-span-full p-8 text-center text-red-500">Nie udało się załadować notatek. Prawdopodobnie wyczerpano limit API GitHuba (60/h) lub folder jest pusty.</div>`;
                 }
             });
     }
@@ -195,11 +208,10 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!categoryTabs) return;
         const categories = new Set();
         categories.add('Wszystkie');
-        // Zaciąganie kategorii dynamicznie z artykułów przypisanych do poziomu
         posts.forEach(post => { if(post.category) categories.add(post.category); });
 
         categoryTabs.innerHTML = "";
-        activeCategory = 'Wszystkie'; // Reset podczas ładowania
+        activeCategory = 'Wszystkie';
         
         categories.forEach(category => {
             const btn = document.createElement("button");
@@ -218,7 +230,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
                 filterPosts();
             });
-            
             categoryTabs.appendChild(btn);
         });
     }
@@ -241,16 +252,12 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
 
-        if (visibleCount === 0 && noResults) {
-            noResults.classList.remove('hidden');
-        } else if (noResults) {
-            noResults.classList.add('hidden');
+        if (noResults) {
+            visibleCount === 0 ? noResults.classList.remove('hidden') : noResults.classList.add('hidden');
         }
     }
 
-    if(searchInput) {
-        searchInput.addEventListener("input", filterPosts);
-    }
+    if(searchInput) searchInput.addEventListener("input", filterPosts);
 
     function renderInitialGrid(posts) {
         if (!postsGrid) return;
@@ -265,9 +272,8 @@ document.addEventListener("DOMContentLoaded", () => {
             if (noResults) noResults.classList.add('hidden');
         }
 
-        posts.forEach((post, index) => {
+        posts.forEach(post => {
             const card = document.createElement("article");
-            
             const categoryName = post.category || 'Inne';
             card.dataset.category = categoryName;
             card.dataset.search = (post.title + " " + (post.content || '')).toLowerCase();
@@ -275,7 +281,6 @@ document.addEventListener("DOMContentLoaded", () => {
             card.className = "bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 transition-all cursor-pointer flex flex-col overflow-hidden hover:shadow-md dark:hover:border-slate-700";
             
             const imageUrl = post.thumbnail || 'https://images.unsplash.com/photo-1456953180671-730de08edaa7?auto=format&fit=crop&q=80&w=600&h=400';
-            
             let plainTextContent = (post.content || '').replace(/(\*|_|#|-|\d\.)/g, '').replace(/\n/g, ' ').trim();
             const excerpt = plainTextContent.length > 100 ? plainTextContent.substring(0, 100) + '...' : plainTextContent;
 
@@ -290,19 +295,51 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
             `;
             
-            card.addEventListener("click", () => showArticle(post, imageUrl, categoryName));
+            // Nawigacja przez URL!
+            card.addEventListener("click", () => {
+                window.location.hash = `#/artykul/${currentLevel}/${post.slug}`;
+            });
             postsGrid.appendChild(card);
         });
     }
 
-    function getReadingTime(text) {
-        const words = text.trim().split(/\s+/).length;
-        return `${Math.ceil(words / 200)} min czytania`;
+    // Ładowanie konkretnego artykułu
+    function loadArticleRoute(level, slug) {
+        if (sessionStorage.getItem(`auth_${level}`) !== 'true') {
+            window.location.hash = '#/';
+            return;
+        }
+
+        currentLevel = level;
+        articleView.classList.remove('hidden');
+        articleContent.innerHTML = `<div class="text-center py-20 text-slate-500">Ładowanie artykułu...</div>`;
+        window.scrollTo(0, 0);
+
+        // Szukamy w pamięci, jeśli jesteśmy po wejściu z siatki
+        const cachedPost = allPosts.find(p => p.slug === slug);
+        if (cachedPost) {
+            renderArticle(cachedPost);
+        } else {
+            // Bezpośrednie wejście z linku URL
+            const folder = level === 'Podstawa' ? 'notatki_podstawa' : 'notatki_rozszerzenie';
+            fetch(`https://api.github.com/repos/micho9879/polski-cms/contents/public/data/${folder}/${slug}.json`, { cache: 'no-cache', headers: { 'Accept': 'application/vnd.github.v3.raw' } })
+                .then(res => res.ok ? res.json() : null)
+                .then(post => {
+                    if (post) renderArticle(post);
+                    else articleContent.innerHTML = `<div class="text-center py-20 text-red-500">Nie znaleziono artykułu.</div>`;
+                });
+        }
     }
 
-    function showArticle(post, imageUrl, categoryName) {
+    function renderArticle(post) {
+        const imageUrl = post.thumbnail || 'https://images.unsplash.com/photo-1456953180671-730de08edaa7?auto=format&fit=crop&q=80&w=600&h=400';
+        const categoryName = post.category || 'Inne';
+        
         const rawHtml = marked.parse(post.content || '');
         const cleanHtml = DOMPurify.sanitize(rawHtml);
+        
+        const words = (post.content || '').trim().split(/\s+/).length;
+        const readingTime = `${Math.ceil(words / 200)} min czytania`;
 
         articleContent.innerHTML = `
             <div class="max-w-4xl mx-auto bg-white dark:bg-slate-900 p-8 sm:p-12 md:p-16 rounded-[2rem] shadow-sm dark:shadow-none border border-slate-200 dark:border-slate-800 mt-6 sm:mt-10 mb-20 relative z-10 transition-colors duration-300">
@@ -311,31 +348,17 @@ document.addEventListener("DOMContentLoaded", () => {
                     <h1 class="text-4xl md:text-5xl font-bold font-serif text-slate-900 dark:text-white mt-4 mb-6 leading-tight">${post.title}</h1>
                     <div class="flex justify-center items-center text-slate-500 dark:text-slate-400 text-sm font-medium">
                         <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        ${getReadingTime(post.content || '')}
+                        ${readingTime}
                     </div>
                 </header>
-                
                 <figure class="mb-12 rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
-                    <img src="${imageUrl}" alt="${post.title}" class="w-full h-auto max-h-[500px] object-cover mx-auto block">
+                    <img src="${imageUrl}" class="w-full h-auto max-h-[500px] object-cover mx-auto block">
                 </figure>
-                
                 <div class="prose prose-slate dark:prose-invert prose-lg md:prose-xl mx-auto max-w-3xl font-serif leading-relaxed prose-headings:font-sans prose-headings:font-bold prose-a:text-indigo-600 dark:prose-a:text-indigo-400">
                     ${cleanHtml}
                 </div>
             </div>
         `;
-
-        homeView.classList.add('hidden');
-        articleView.classList.remove('hidden');
-        window.scrollTo(0, 0);
-    }
-
-    if(backBtn) {
-        backBtn.addEventListener('click', () => {
-            articleView.classList.add('hidden');
-            homeView.classList.remove('hidden');
-            window.scrollTo({ top: 0, behavior: 'auto' });
-        });
     }
 
     function initTheme() {
@@ -355,4 +378,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (toggleHome) toggleHome.addEventListener('click', toggleTheme);
         if (toggleArticle) toggleArticle.addEventListener('click', toggleTheme);
     }
+    
+    // Uruchomienie routera na start
+    handleRoute();
 });

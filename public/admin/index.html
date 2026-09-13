@@ -54,15 +54,28 @@
               ]
             },
             {
-              name: 'notatki',
-              label: 'Notatki dla uczniów',
-              folder: 'public/data/notatki',
+              name: 'notatki_podstawa',
+              label: 'Notatki - Podstawa',
+              folder: 'public/data/notatki_podstawa',
               create: true,
               extension: 'json',
               format: 'json',
               fields: [
                 { label: 'Tytuł', name: 'title', widget: 'string' },
-                { label: 'Poziom', name: 'poziom', widget: 'select', options: ['Podstawa', 'Rozszerzenie'], required: true },
+                { label: 'Kategoria', name: 'category', widget: 'relation', collection: 'kategorie', search_fields: ['title'], value_field: 'title', display_fields: ['title'], required: true },
+                { label: 'Miniaturka', name: 'thumbnail', widget: 'image', required: false },
+                { label: 'Treść', name: 'content', widget: 'markdown' }
+              ]
+            },
+            {
+              name: 'notatki_rozszerzenie',
+              label: 'Notatki - Rozszerzenie',
+              folder: 'public/data/notatki_rozszerzenie',
+              create: true,
+              extension: 'json',
+              format: 'json',
+              fields: [
+                { label: 'Tytuł', name: 'title', widget: 'string' },
                 { label: 'Kategoria', name: 'category', widget: 'relation', collection: 'kategorie', search_fields: ['title'], value_field: 'title', display_fields: ['title'], required: true },
                 { label: 'Miniaturka', name: 'thumbnail', widget: 'image', required: false },
                 { label: 'Treść', name: 'content', widget: 'markdown' }
