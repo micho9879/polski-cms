@@ -94,7 +94,7 @@
         html.dark details[open] { background: #312e81; border-color: #4338ca; }
         details p { margin-top: 1rem; margin-bottom: 0; }
 
-        /* Pasek postępu czytania */
+        /* Pasek postępu czytania - Optymalizacja GPU */
         #progress-bar-container {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 4px;
@@ -102,9 +102,10 @@
             z-index: 100;
         }
         #progress-bar {
-            height: 100%; width: 0%;
+            height: 100%; width: 100%;
             background: #4f46e5;
-            transition: width 0.1s;
+            transform-origin: left;
+            transform: scaleX(0);
         }
 
         /* Animacja polubienia */
@@ -121,14 +122,15 @@
             100% { background-position: 400px 0; }
         }
         .skeleton {
-            background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
-            background-size: 800px 100%;
-            animation: shimmer 1.5s infinite ease-in-out;
+            background: #e2e8f0;
+            background-image: linear-gradient(90deg, #e2e8f0 0px, #f1f5f9 40px, #e2e8f0 80px);
+            background-size: 800px;
+            animation: shimmer 2s infinite linear;
             border-radius: 0.75rem;
         }
         html.dark .skeleton {
-            background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
-            background-size: 800px 100%;
+            background: #1e293b;
+            background-image: linear-gradient(90deg, #1e293b 0px, #334155 40px, #1e293b 80px);
         }
 
         /* Print styles */
@@ -153,7 +155,7 @@
     <main class="flex-grow w-full block">
 
         <!-- ===== WIDOK 1: Ekran Wyboru Poziomu ===== -->
-        <div id="login-view" class="fade-in pt-20 pb-16 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto text-center flex flex-col items-center justify-center min-h-[70vh]">
+        <div id="login-view" class="hidden pt-20 pb-16 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto text-center flex flex-col items-center justify-center min-h-[70vh]">
             
             <!-- Dark Mode toggle na ekranie logowania -->
             <div class="absolute top-4 right-4 sm:top-8 sm:right-8">

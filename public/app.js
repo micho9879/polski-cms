@@ -95,13 +95,20 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Pasek postępu czytania
+    let isScrolling = false;
     window.addEventListener('scroll', () => {
         if (articleView.classList.contains('hidden')) return;
-        const scrollPx = document.documentElement.scrollTop || document.body.scrollTop;
-        const winHeightPx = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-        const scrolled = (scrollPx / winHeightPx) * 100;
-        const progressBar = document.getElementById("progress-bar");
-        if (progressBar) progressBar.style.width = scrolled + "%";
+        if (!isScrolling) {
+            window.requestAnimationFrame(() => {
+                const scrollPx = document.documentElement.scrollTop || document.body.scrollTop;
+                const winHeightPx = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+                const scrolled = scrollPx / winHeightPx; // 0 do 1
+                const progressBar = document.getElementById("progress-bar");
+                if (progressBar) progressBar.style.transform = `scaleX(${scrolled})`;
+                isScrolling = false;
+            });
+            isScrolling = true;
+        }
     });
 
     initTheme();
@@ -444,7 +451,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function loadArticleRoute(level, slug) {
         currentLevel = level;
         showView(articleView);
-        document.getElementById("progress-bar").style.width = "0%";
+        document.getElementById("progress-bar").style.transform = "scaleX(0)";
         articleContent.innerHTML = `<div class="max-w-4xl mx-auto mt-10 space-y-6 px-4"><div class="skeleton h-10 w-2/3 mx-auto"></div><div class="skeleton h-6 w-1/3 mx-auto"></div><div class="skeleton h-72 w-full rounded-2xl"></div><div class="skeleton h-4 w-full"></div><div class="skeleton h-4 w-5/6"></div><div class="skeleton h-4 w-4/6"></div></div>`;
         window.scrollTo(0, 0);
 
