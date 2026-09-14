@@ -56,6 +56,61 @@
             background-image: radial-gradient(#334155 1px, transparent 1px);
         }
 
+        /* Flashcards (fiszki) */
+        details {
+            background: #f1f5f9;
+            border-radius: 1rem;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s;
+        }
+        html.dark details {
+            background: #1e293b;
+            border-color: #334155;
+        }
+        summary {
+            font-weight: 700;
+            cursor: pointer;
+            list-style: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #4f46e5;
+        }
+        html.dark summary { color: #818cf8; }
+        summary::-webkit-details-marker { display: none; }
+        summary::after {
+            content: "+";
+            font-size: 1.5rem;
+            transition: transform 0.3s;
+        }
+        details[open] summary::after { transform: rotate(45deg); }
+        details[open] { background: #e0e7ff; border-color: #c7d2fe; }
+        html.dark details[open] { background: #312e81; border-color: #4338ca; }
+        details p { margin-top: 1rem; margin-bottom: 0; }
+
+        /* Pasek postępu czytania */
+        #progress-bar-container {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 4px;
+            background: transparent;
+            z-index: 100;
+        }
+        #progress-bar {
+            height: 100%; width: 0%;
+            background: #4f46e5;
+            transition: width 0.1s;
+        }
+
+        /* Animacja polubienia */
+        @keyframes heartPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+        .heart-animate { animation: heartPulse 0.3s ease-out; color: #ef4444 !important; fill: #ef4444; }
+
         /* Loading skeleton */
         @keyframes shimmer {
             0% { background-position: -400px 0; }
@@ -186,13 +241,18 @@
 
         <!-- ===== WIDOK 3: Artykuł ===== -->
         <div id="article-view" class="view-transition view-hidden relative pb-20">
+            <div id="progress-bar-container" class="no-print"><div id="progress-bar"></div></div>
             <div class="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm transition-colors duration-300 no-print">
                 <div class="max-w-4xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
                     <button id="back-btn" class="inline-flex items-center text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium min-h-[44px] px-2 transition-colors focus:outline-none">
                         <svg class="mr-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                        Wróć do materiałów
+                        Wróć
                     </button>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-1 sm:gap-2">
+                        <!-- Kontrola czcionki -->
+                        <button id="font-minus-btn" class="p-2 font-bold bg-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors focus:outline-none rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">A-</button>
+                        <button id="font-plus-btn" class="p-2 font-bold bg-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors focus:outline-none rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">A+</button>
+                        
                         <!-- Przycisk Drukuj -->
                         <button id="print-btn" class="p-2 bg-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors focus:outline-none min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>

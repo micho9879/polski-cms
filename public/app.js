@@ -26,6 +26,51 @@ document.addEventListener("DOMContentLoaded", () => {
     let currentLevel = '';
     let settingsData = null;
     let lastFetchedLevel = '';
+    
+    // Ulubione
+    let favorites = JSON.parse(localStorage.getItem('polski_favorites') || '[]');
+    function toggleFavorite(slug) {
+        if (favorites.includes(slug)) {
+            favorites = favorites.filter(f => f !== slug);
+        } else {
+            favorites.push(slug);
+        }
+        localStorage.setItem('polski_favorites', JSON.stringify(favorites));
+        renderInitialGrid(allPosts);
+        
+        // Zaktualizuj widok artykułu jeśli jest otwarty
+        const heartBtn = document.getElementById(`fav-btn-${slug}`);
+        if(heartBtn) {
+            heartBtn.classList.toggle('text-red-500');
+            heartBtn.classList.toggle('fill-current');
+            heartBtn.classList.add('heart-animate');
+            setTimeout(() => heartBtn.classList.remove('heart-animate'), 300);
+        }
+    }
+
+    // Sterowanie rozmiarem czcionki
+    let currentFontSize = 18; // bazowy rozmiar w px (tekst-lg)
+    const fontMinusBtn = document.getElementById("font-minus-btn");
+    const fontPlusBtn = document.getElementById("font-plus-btn");
+    
+    if (fontMinusBtn) fontMinusBtn.addEventListener('click', () => changeFontSize(-2));
+    if (fontPlusBtn) fontPlusBtn.addEventListener('click', () => changeFontSize(2));
+    
+    function changeFontSize(change) {
+        currentFontSize = Math.max(14, Math.min(26, currentFontSize + change));
+        const proseDiv = document.querySelector('.prose');
+        if (proseDiv) proseDiv.style.fontSize = `${currentFontSize}px`;
+    }
+
+    // Pasek postępu czytania
+    window.addEventListener('scroll', () => {
+        if (!articleView.classList.contains('view-visible')) return;
+        const scrollPx = document.documentElement.scrollTop || document.body.scrollTop;
+        const winHeightPx = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        const scrolled = (scrollPx / winHeightPx) * 100;
+        const progressBar = document.getElementById("progress-bar");
+        if (progressBar) progressBar.style.width = scrolled + "%";
+    });
 
     initTheme();
 
@@ -209,13 +254,16 @@ document.addEventListener("DOMContentLoaded", () => {
             });
     }
 
-    // --- ZAKŁADKI Z LICZNIKIEM ---
+    // --- ZAKŁADKI Z LICZNIKIEM + ULUBIONE ---
     function renderTabs(posts) {
         if (!categoryTabs) return;
         const catCounts = new Map();
-        catCounts.set('Wszystkie', posts.length);
+        
+        // Zliczamy ulubione z AKTUALNEGO poziomu
+        let favCount = 0;
         posts.forEach(p => {
             if (p.category) catCounts.set(p.category, (catCounts.get(p.category) || 0) + 1);
+            if (favorites.includes(p.slug)) favCount++;
         });
 
         categoryTabs.innerHTML = '';
@@ -224,20 +272,29 @@ document.addEventListener("DOMContentLoaded", () => {
         const activeClass = 'bg-slate-900 dark:bg-indigo-500 text-white border-slate-900 dark:border-indigo-500';
         const inactiveClass = 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700/50';
 
+        // Zakładka Wszystkie
+        createTab('Wszystkie', posts.length);
+        // Zakładka Ulubione
+        if (favCount > 0) createTab('Ulubione', favCount, '❤️');
+        
         catCounts.forEach((count, category) => {
+            createTab(category, count);
+        });
+
+        function createTab(name, count, icon = '') {
             const btn = document.createElement('button');
-            btn.dataset.cat = category;
-            btn.innerHTML = `${category} <span class="ml-1 opacity-60">(${count})</span>`;
-            btn.className = `${baseClass} ${category === activeCategory ? activeClass : inactiveClass}`;
+            btn.dataset.cat = name;
+            btn.innerHTML = `${icon ? icon + ' ' : ''}${name} <span class="ml-1 opacity-60">(${count})</span>`;
+            btn.className = `${baseClass} ${name === activeCategory ? activeClass : inactiveClass}`;
             btn.addEventListener('click', () => {
-                activeCategory = category;
+                activeCategory = name;
                 Array.from(categoryTabs.children).forEach(c => {
                     c.className = `${baseClass} ${c.dataset.cat === activeCategory ? activeClass : inactiveClass}`;
                 });
                 filterPosts();
             });
             categoryTabs.appendChild(btn);
-        });
+        }
     }
 
     function filterPosts() {
@@ -245,7 +302,11 @@ document.addEventListener("DOMContentLoaded", () => {
         const query = searchInput.value.toLowerCase();
         let visible = 0;
         Array.from(postsGrid.children).forEach(card => {
-            const ok = (activeCategory === 'Wszystkie' || card.dataset.category === activeCategory) && card.dataset.search.includes(query);
+            const isFavTab = activeCategory === 'Ulubione';
+            const matchesCategory = isFavTab ? favorites.includes(card.dataset.slug) : (activeCategory === 'Wszystkie' || card.dataset.category === activeCategory);
+            const matchesSearch = card.dataset.search.includes(query);
+            
+            const ok = matchesCategory && matchesSearch;
             card.classList.toggle('hidden', !ok);
             if (ok) visible++;
         });
@@ -277,24 +338,39 @@ document.addEventListener("DOMContentLoaded", () => {
             const card = document.createElement('article');
             const cat = post.category || 'Inne';
             card.dataset.category = cat;
+            card.dataset.slug = post.slug;
             card.dataset.search = (post.title + ' ' + (post.content || '')).toLowerCase();
-            card.className = 'bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 transition-all cursor-pointer flex flex-col overflow-hidden hover:shadow-md dark:hover:border-slate-700';
+            card.className = 'group bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 transition-all flex flex-col overflow-hidden hover:shadow-md dark:hover:border-slate-700 relative';
 
             const img = post.thumbnail || 'https://images.unsplash.com/photo-1456953180671-730de08edaa7?auto=format&fit=crop&q=80&w=600&h=400';
             let plain = (post.content || '').replace(/(\*|_|#|-|\d\.)/g, '').replace(/\n/g, ' ').trim();
             const excerpt = plain.length > 100 ? plain.substring(0, 100) + '...' : plain;
 
+            const isFav = favorites.includes(post.slug);
+            const heartColor = isFav ? 'text-red-500 fill-current' : 'text-white drop-shadow-md';
+
             card.innerHTML = `
-                <div class="h-48 overflow-hidden border-b border-slate-100 dark:border-slate-800">
-                    <img src="${img}" class="w-full h-full object-cover" loading="lazy" alt="${post.title}">
+                <div class="h-48 overflow-hidden border-b border-slate-100 dark:border-slate-800 relative cursor-pointer" onclick="window.location.hash = '#/artykul/${currentLevel}/${post.slug}'">
+                    <img src="${img}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" alt="${post.title}">
                 </div>
-                <div class="p-6 flex flex-col flex-grow">
+                <button class="absolute top-3 right-3 p-2 bg-black/20 hover:bg-black/40 backdrop-blur-sm rounded-full transition-colors z-10 fav-grid-btn" data-slug="${post.slug}">
+                    <svg class="w-5 h-5 ${heartColor} transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                </button>
+                <div class="p-6 flex flex-col flex-grow cursor-pointer" onclick="window.location.hash = '#/artykul/${currentLevel}/${post.slug}'">
                     <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">${cat}</span>
                     <h3 class="text-xl font-bold font-serif text-slate-900 dark:text-slate-100 mb-3 leading-snug line-clamp-2">${post.title}</h3>
                     <p class="text-slate-600 dark:text-slate-400 text-sm flex-grow line-clamp-3 leading-relaxed">${excerpt}</p>
                 </div>`;
-            card.addEventListener('click', () => { window.location.hash = `#/artykul/${currentLevel}/${post.slug}`; });
+                
             postsGrid.appendChild(card);
+        });
+
+        // Obsługa polubień na kafelkach
+        document.querySelectorAll('.fav-grid-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleFavorite(btn.dataset.slug);
+            });
         });
     }
 
@@ -303,6 +379,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (sessionStorage.getItem(`auth_${level}`) !== 'true') { window.location.hash = '#/'; return; }
         currentLevel = level;
         showView(articleView);
+        document.getElementById("progress-bar").style.width = "0%";
         articleContent.innerHTML = `<div class="max-w-4xl mx-auto mt-10 space-y-6 px-4"><div class="skeleton h-10 w-2/3 mx-auto"></div><div class="skeleton h-6 w-1/3 mx-auto"></div><div class="skeleton h-72 w-full rounded-2xl"></div><div class="skeleton h-4 w-full"></div><div class="skeleton h-4 w-5/6"></div><div class="skeleton h-4 w-4/6"></div></div>`;
         window.scrollTo(0, 0);
 
@@ -313,7 +390,10 @@ document.addEventListener("DOMContentLoaded", () => {
         fetch(`https://api.github.com/repos/micho9879/polski-cms/contents/public/data/${folder}/${slug}.json`, { cache: 'no-cache', headers: { 'Accept': 'application/vnd.github.v3.raw' } })
             .then(r => r.ok ? r.json() : null)
             .then(post => {
-                if (post) renderArticle(post);
+                if (post) {
+                    post.slug = slug;
+                    renderArticle(post);
+                }
                 else articleContent.innerHTML = `<div class="text-center py-20"><svg class="w-16 h-16 mx-auto text-slate-300 dark:text-slate-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><p class="text-slate-500 text-lg font-medium">Nie znaleziono artykułu</p></div>`;
             });
     }
@@ -321,13 +401,48 @@ document.addEventListener("DOMContentLoaded", () => {
     function renderArticle(post) {
         const img = post.thumbnail || 'https://images.unsplash.com/photo-1456953180671-730de08edaa7?auto=format&fit=crop&q=80&w=600&h=400';
         const cat = post.category || 'Inne';
+        
+        // Generowanie HTML
         const html = DOMPurify.sanitize(marked.parse(post.content || ''));
         const words = (post.content || '').trim().split(/\s+/).length;
         const time = `${Math.ceil(words / 200)} min czytania`;
 
+        const isFav = favorites.includes(post.slug);
+        const heartColor = isFav ? 'text-red-500 fill-current' : 'text-slate-400 dark:text-slate-500';
+
+        // Generowanie Spisu Treści (TOC)
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        const headings = tempDiv.querySelectorAll('h1, h2, h3');
+        let tocHtml = '';
+        
+        if (headings.length > 1) {
+            tocHtml = `
+            <div class="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 mb-10">
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg>
+                    Spis Treści
+                </h3>
+                <ul class="space-y-2 text-sm text-slate-600 dark:text-slate-400 font-sans">
+            `;
+            
+            headings.forEach((h, index) => {
+                const id = `heading-${index}`;
+                h.id = id;
+                const pl = h.tagName === 'H3' ? 'pl-4' : (h.tagName === 'H1' ? 'font-bold' : '');
+                tocHtml += `<li class="${pl}"><a href="#${id}" class="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors inline-block py-1" onclick="document.getElementById('${id}').scrollIntoView({behavior: 'smooth'}); return false;">${h.textContent}</a></li>`;
+            });
+            tocHtml += `</ul></div>`;
+        }
+
+        // Finalny HTML
         articleContent.innerHTML = `
             <div class="max-w-4xl mx-auto bg-white dark:bg-slate-900 p-8 sm:p-12 md:p-16 rounded-[2rem] shadow-sm dark:shadow-none border border-slate-200 dark:border-slate-800 mt-6 sm:mt-10 mb-20 relative z-10 transition-colors duration-300">
-                <header class="mb-10 text-center">
+                <header class="mb-10 text-center relative">
+                    <button id="fav-btn-${post.slug}" class="absolute right-0 top-0 p-3 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-full transition-colors" title="Dodaj do ulubionych">
+                        <svg class="w-6 h-6 ${heartColor} transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                    </button>
+                    
                     <span class="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">${cat}</span>
                     <h1 class="text-4xl md:text-5xl font-bold font-serif text-slate-900 dark:text-white mt-4 mb-6 leading-tight">${post.title}</h1>
                     <div class="flex justify-center items-center text-slate-500 dark:text-slate-400 text-sm font-medium">
@@ -335,13 +450,21 @@ document.addEventListener("DOMContentLoaded", () => {
                         ${time}
                     </div>
                 </header>
-                <figure class="mb-12 rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
+                <figure class="mb-12 rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 no-print">
                     <img src="${img}" alt="${post.title}" class="w-full h-auto max-h-[500px] object-cover mx-auto block">
                 </figure>
-                <div class="prose prose-slate dark:prose-invert prose-lg md:prose-xl mx-auto max-w-3xl font-serif leading-relaxed prose-headings:font-sans prose-headings:font-bold prose-a:text-indigo-600 dark:prose-a:text-indigo-400">
-                    ${html}
+                
+                ${tocHtml}
+                
+                <div class="prose prose-slate dark:prose-invert max-w-3xl font-serif leading-relaxed prose-headings:font-sans prose-headings:font-bold prose-a:text-indigo-600 dark:prose-a:text-indigo-400 mx-auto transition-all" style="font-size: ${currentFontSize}px;">
+                    ${tempDiv.innerHTML}
                 </div>
             </div>`;
+
+        // Event ulubionych w artykule
+        document.getElementById(`fav-btn-${post.slug}`).addEventListener('click', () => {
+            toggleFavorite(post.slug);
+        });
     }
 
     // --- DARK MODE ---
