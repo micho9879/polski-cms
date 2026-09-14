@@ -35,7 +35,21 @@ document.addEventListener("DOMContentLoaded", () => {
             favorites.push(slug);
         }
         localStorage.setItem('polski_favorites', JSON.stringify(favorites));
-        renderInitialGrid(allPosts);
+        
+        // Zaktualizuj serduszka na siatce bez przeładowywania DOM
+        updateGridHearts();
+        
+        // Przelicz zakładki
+        let favCount = 0;
+        allPosts.forEach(p => { if (favorites.includes(p.slug)) favCount++; });
+        
+        // Jeśli usunęliśmy ostatnie ulubione będąc w zakładce Ulubione, wracamy do Wszystkich
+        if (activeCategory === 'Ulubione' && favCount === 0) {
+            activeCategory = 'Wszystkie';
+        }
+        
+        renderTabs(allPosts);
+        filterPosts();
         
         // Zaktualizuj widok artykułu jeśli jest otwarty
         const heartBtn = document.getElementById(`fav-btn-${slug}`);
@@ -50,6 +64,20 @@ document.addEventListener("DOMContentLoaded", () => {
             heartBtn.classList.add('heart-animate');
             setTimeout(() => heartBtn.classList.remove('heart-animate'), 300);
         }
+    }
+
+    function updateGridHearts() {
+        document.querySelectorAll('.fav-grid-btn').forEach(btn => {
+            const slug = btn.dataset.slug;
+            const svg = btn.querySelector('svg');
+            if (favorites.includes(slug)) {
+                svg.classList.remove('text-white', 'drop-shadow-md');
+                svg.classList.add('text-red-500', 'fill-current');
+            } else {
+                svg.classList.add('text-white', 'drop-shadow-md');
+                svg.classList.remove('text-red-500', 'fill-current');
+            }
+        });
     }
 
     // Sterowanie rozmiarem czcionki
@@ -85,10 +113,7 @@ document.addEventListener("DOMContentLoaded", () => {
         allViews.forEach(v => {
             if (v === viewEl) {
                 v.classList.remove('hidden');
-                // Mały trick z requestAnimationFrame pozwala odpalić CSS animation po usunięciu display:none
-                requestAnimationFrame(() => {
-                    v.classList.add('fade-in');
-                });
+                requestAnimationFrame(() => { v.classList.add('fade-in'); });
             } else {
                 v.classList.add('hidden');
                 v.classList.remove('fade-in');
@@ -96,7 +121,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // --- ROUTER ---
+    // --- ROUTER & ZABEZPIECZENIA ---
     window.addEventListener('hashchange', handleRoute);
 
     function handleRoute() {
@@ -106,10 +131,11 @@ document.addEventListener("DOMContentLoaded", () => {
             const parts = hash.split('/');
             const level = decodeURIComponent(parts[2]);
             const slug = decodeURIComponent(parts[3]);
-            if (level && slug) { loadArticleRoute(level, slug); return; }
+            if (level && slug) { requireAuth(level, () => loadArticleRoute(level, slug)); return; }
         }
         if (hash === '#/Podstawa' || hash === '#/Rozszerzenie') {
-            loadGridRoute(hash.replace('#/', ''));
+            const level = hash.replace('#/', '');
+            requireAuth(level, () => loadGridRoute(level));
             return;
         }
         if (!hash || hash === '#' || hash === '#/') {
@@ -122,8 +148,40 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         // Nieznany hash = 404
         showView(notFoundView);
-        if(notFoundView) {
-            notFoundView.style.display = 'flex'; // dla pewności przy flex-col
+        if(notFoundView) notFoundView.style.display = 'flex';
+    }
+
+    function requireAuth(level, onSuccess) {
+        const savedPass = localStorage.getItem(`pass_${level}`);
+        if (!savedPass) {
+            window.location.hash = '#/';
+            return;
+        }
+
+        if (settingsData) {
+            validateAndProceed(level, savedPass, onSuccess);
+        } else {
+            fetch('https://api.github.com/repos/micho9879/polski-cms/contents/public/data/settings.json', { cache: 'no-cache' })
+                .then(res => { if (res.status === 404) return null; if (!res.ok) throw new Error('API'); return res.json(); })
+                .then(fi => fi ? fetch(`${fi.download_url}?v=${fi.sha}`, { cache: 'no-cache' }).then(r => r.json()) : null)
+                .then(s => { 
+                    if (s) settingsData = s; 
+                    validateAndProceed(level, savedPass, onSuccess);
+                })
+                .catch(() => {
+                    // W razie błędu API (limit) wpuszczamy ucznia awaryjnie, by nie stracił dostępu przed maturą
+                    onSuccess();
+                });
+        }
+    }
+
+    function validateAndProceed(level, savedPass, onSuccess) {
+        const correct = level === 'Podstawa' ? settingsData?.password_podstawa : settingsData?.password_rozszerzenie;
+        if (savedPass === correct) {
+            onSuccess();
+        } else {
+            localStorage.removeItem(`pass_${level}`);
+            window.location.hash = '#/';
         }
     }
 
@@ -131,8 +189,8 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll('.level-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const level = btn.dataset.level;
-            if (localStorage.getItem(`auth_${level}`) === 'true') {
-                window.location.hash = `#/${level}`;
+            if (localStorage.getItem(`pass_${level}`)) {
+                window.location.hash = `#/${level}`; // Router wywoła requireAuth
             } else {
                 currentLevel = level;
                 levelSelection.classList.add('hidden');
@@ -179,13 +237,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function checkPassword(entered) {
-        let correct = '';
-        if (currentLevel === 'Podstawa') correct = settingsData?.password_podstawa || '';
-        if (currentLevel === 'Rozszerzenie') correct = settingsData?.password_rozszerzenie || '';
+        let correct = currentLevel === 'Podstawa' ? settingsData?.password_podstawa : settingsData?.password_rozszerzenie;
         submitLoginBtn.textContent = 'Wejdź';
         submitLoginBtn.disabled = false;
+        
         if (entered === correct) {
-            localStorage.setItem(`auth_${currentLevel}`, 'true');
+            localStorage.setItem(`pass_${currentLevel}`, entered);
             window.location.hash = `#/${currentLevel}`;
         } else {
             loginError.textContent = 'Niepoprawne hasło! Spróbuj ponownie.';
@@ -197,7 +254,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- WIDOK SIATKI ---
     function loadGridRoute(level) {
-        if (localStorage.getItem(`auth_${level}`) !== 'true') { window.location.hash = '#/'; return; }
         currentLevel = level;
         showView(homeView);
         if (heroTitle) heroTitle.textContent = `Matura ${level}`;
@@ -386,7 +442,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- WIDOK ARTYKUŁU ---
     function loadArticleRoute(level, slug) {
-        if (localStorage.getItem(`auth_${level}`) !== 'true') { window.location.hash = '#/'; return; }
         currentLevel = level;
         showView(articleView);
         document.getElementById("progress-bar").style.width = "0%";

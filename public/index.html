@@ -52,10 +52,12 @@
             background-color: #f8fafc;
             background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
             background-size: 20px 20px;
+            background-attachment: fixed;
         }
         html.dark .bg-dots {
             background-color: #0f172a;
             background-image: radial-gradient(#334155 1px, transparent 1px);
+            background-attachment: fixed;
         }
 
         /* Flashcards (fiszki) */
@@ -148,10 +150,10 @@
 </head>
 <body class="bg-dots text-slate-800 dark:text-slate-300 font-sans min-h-screen flex flex-col antialiased selection:bg-slate-300 selection:text-slate-900 dark:selection:bg-indigo-500 dark:selection:text-white transition-colors duration-300">
     
-    <main class="flex-grow w-full flex flex-col">
+    <main class="flex-grow w-full block">
 
         <!-- ===== WIDOK 1: Ekran Wyboru Poziomu ===== -->
-        <div id="login-view" class="fade-in pt-20 pb-16 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto text-center flex flex-col items-center justify-center min-h-[70vh] flex-grow">
+        <div id="login-view" class="fade-in pt-20 pb-16 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto text-center flex flex-col items-center justify-center min-h-[70vh]">
             
             <!-- Dark Mode toggle na ekranie logowania -->
             <div class="absolute top-4 right-4 sm:top-8 sm:right-8">
@@ -200,7 +202,7 @@
         </div>
 
         <!-- ===== WIDOK 2: Siatka artykułów ===== -->
-        <div id="home-view" class="hidden flex-grow">
+        <div id="home-view" class="hidden block">
             <header class="pt-16 pb-12 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto text-center relative w-full">
                 <div class="flex justify-between items-center w-full mb-8">
                     <button id="back-to-levels-btn" class="inline-flex items-center text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors font-medium">
@@ -242,7 +244,7 @@
         </div>
 
         <!-- ===== WIDOK 3: Artykuł ===== -->
-        <div id="article-view" class="hidden relative pb-20 w-full flex-grow">
+        <div id="article-view" class="hidden relative pb-20 w-full block">
             <div id="progress-bar-container" class="no-print"><div id="progress-bar"></div></div>
             <div class="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm transition-colors duration-300 no-print">
                 <div class="max-w-4xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
@@ -271,7 +273,7 @@
         </div>
 
         <!-- ===== WIDOK 4: Strona 404 ===== -->
-        <div id="not-found-view" class="hidden pt-20 pb-16 px-4 text-center flex-col items-center justify-center min-h-[60vh] flex-grow">
+        <div id="not-found-view" class="hidden pt-20 pb-16 px-4 text-center flex-col items-center justify-center min-h-[60vh]">
             <svg class="w-24 h-24 text-slate-300 dark:text-slate-600 mb-6 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             <h2 class="text-3xl font-bold font-serif text-slate-900 dark:text-white mb-3">Nie znaleziono strony</h2>
             <p class="text-slate-500 dark:text-slate-400 mb-8">Strona, której szukasz, nie istnieje lub została przeniesiona.</p>
