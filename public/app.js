@@ -27,7 +27,6 @@ document.addEventListener("DOMContentLoaded", () => {
     let settingsData = null;
     let lastFetchedLevel = '';
     
-    // Ulubione
     let favorites = JSON.parse(localStorage.getItem('polski_favorites') || '[]');
     function toggleFavorite(slug) {
         if (favorites.includes(slug)) {
@@ -41,8 +40,13 @@ document.addEventListener("DOMContentLoaded", () => {
         // Zaktualizuj widok artykułu jeśli jest otwarty
         const heartBtn = document.getElementById(`fav-btn-${slug}`);
         if(heartBtn) {
-            heartBtn.classList.toggle('text-red-500');
-            heartBtn.classList.toggle('fill-current');
+            const heartSvg = heartBtn.querySelector('svg');
+            if (heartSvg) {
+                heartSvg.classList.toggle('text-red-500');
+                heartSvg.classList.toggle('fill-current');
+                heartSvg.classList.toggle('text-slate-400');
+                heartSvg.classList.toggle('dark:text-slate-500');
+            }
             heartBtn.classList.add('heart-animate');
             setTimeout(() => heartBtn.classList.remove('heart-animate'), 300);
         }
@@ -64,7 +68,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Pasek postępu czytania
     window.addEventListener('scroll', () => {
-        if (!articleView.classList.contains('view-visible')) return;
+        if (articleView.classList.contains('hidden')) return;
         const scrollPx = document.documentElement.scrollTop || document.body.scrollTop;
         const winHeightPx = document.documentElement.scrollHeight - document.documentElement.clientHeight;
         const scrolled = (scrollPx / winHeightPx) * 100;
@@ -80,11 +84,14 @@ document.addEventListener("DOMContentLoaded", () => {
     function showView(viewEl) {
         allViews.forEach(v => {
             if (v === viewEl) {
-                v.classList.remove('view-hidden');
-                v.classList.add('view-visible');
+                v.classList.remove('hidden');
+                // Mały trick z requestAnimationFrame pozwala odpalić CSS animation po usunięciu display:none
+                requestAnimationFrame(() => {
+                    v.classList.add('fade-in');
+                });
             } else {
-                v.classList.add('view-hidden');
-                v.classList.remove('view-visible');
+                v.classList.add('hidden');
+                v.classList.remove('fade-in');
             }
         });
     }
@@ -115,13 +122,16 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         // Nieznany hash = 404
         showView(notFoundView);
+        if(notFoundView) {
+            notFoundView.style.display = 'flex'; // dla pewności przy flex-col
+        }
     }
 
     // --- EKRAN LOGOWANIA ---
     document.querySelectorAll('.level-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const level = btn.dataset.level;
-            if (sessionStorage.getItem(`auth_${level}`) === 'true') {
+            if (localStorage.getItem(`auth_${level}`) === 'true') {
                 window.location.hash = `#/${level}`;
             } else {
                 currentLevel = level;
@@ -175,7 +185,7 @@ document.addEventListener("DOMContentLoaded", () => {
         submitLoginBtn.textContent = 'Wejdź';
         submitLoginBtn.disabled = false;
         if (entered === correct) {
-            sessionStorage.setItem(`auth_${currentLevel}`, 'true');
+            localStorage.setItem(`auth_${currentLevel}`, 'true');
             window.location.hash = `#/${currentLevel}`;
         } else {
             loginError.textContent = 'Niepoprawne hasło! Spróbuj ponownie.';
@@ -187,7 +197,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- WIDOK SIATKI ---
     function loadGridRoute(level) {
-        if (sessionStorage.getItem(`auth_${level}`) !== 'true') { window.location.hash = '#/'; return; }
+        if (localStorage.getItem(`auth_${level}`) !== 'true') { window.location.hash = '#/'; return; }
         currentLevel = level;
         showView(homeView);
         if (heroTitle) heroTitle.textContent = `Matura ${level}`;
@@ -376,7 +386,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- WIDOK ARTYKUŁU ---
     function loadArticleRoute(level, slug) {
-        if (sessionStorage.getItem(`auth_${level}`) !== 'true') { window.location.hash = '#/'; return; }
+        if (localStorage.getItem(`auth_${level}`) !== 'true') { window.location.hash = '#/'; return; }
         currentLevel = level;
         showView(articleView);
         document.getElementById("progress-bar").style.width = "0%";
