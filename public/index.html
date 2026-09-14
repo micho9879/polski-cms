@@ -5,10 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Materiały do języka polskiego</title>
     
+    <!-- PWA -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#f8fafc">
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3389/3389081.png" type="image/png">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3389/3389081.png">
     
-    <!-- Google Fonts: Lora for titles/reading, Inter for UI -->
+    <!-- Open Graph / Social Media -->
+    <meta property="og:title" content="Materiały do języka polskiego">
+    <meta property="og:description" content="Baza wiedzy, opracowania lektur i repetytorium gramatyczne z języka polskiego.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://cdn-icons-png.flaticon.com/512/3389/3389081.png">
+    <meta name="description" content="Baza wiedzy, opracowania lektur i repetytorium gramatyczne z języka polskiego.">
+    
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
@@ -31,26 +41,46 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
     
     <style>
-        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
+        /* Przejścia między widokami SPA */
+        .view-transition { transition: opacity 0.15s ease-out; }
+        .view-hidden { opacity: 0; pointer-events: none; position: absolute; }
+        .view-visible { opacity: 1; pointer-events: auto; position: relative; }
+
         .bg-dots {
             background-color: #f8fafc;
             background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
             background-size: 20px 20px;
         }
-        
-        /* Wzór kropek dla dark mode */
         html.dark .bg-dots {
             background-color: #0f172a;
             background-image: radial-gradient(#334155 1px, transparent 1px);
         }
+
+        /* Loading skeleton */
+        @keyframes shimmer {
+            0% { background-position: -400px 0; }
+            100% { background-position: 400px 0; }
+        }
+        .skeleton {
+            background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+            background-size: 800px 100%;
+            animation: shimmer 1.5s infinite ease-in-out;
+            border-radius: 0.75rem;
+        }
+        html.dark .skeleton {
+            background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+            background-size: 800px 100%;
+        }
+
+        /* Print styles */
+        @media print {
+            body { background: white !important; }
+            .no-print { display: none !important; }
+            #article-content > div { box-shadow: none !important; border: none !important; padding: 0 !important; }
+        }
     </style>
     
-    <!-- Skrypt sprawdzający motyw przed wyrenderowaniem drzewa DOM, by zapobiec miganiu jasnego motywu -->
+    <!-- Dark mode pre-check -->
     <script>
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark')
@@ -61,10 +91,19 @@
 </head>
 <body class="bg-dots text-slate-800 dark:text-slate-300 font-sans min-h-screen flex flex-col antialiased selection:bg-slate-300 selection:text-slate-900 dark:selection:bg-indigo-500 dark:selection:text-white transition-colors duration-300">
     
-    <!-- Main Content -->
-    <main class="flex-grow w-full">
-        <!-- SPA: Ekran Wyboru i Logowania -->
-        <div id="login-view" class="pt-20 pb-16 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto text-center flex flex-col items-center justify-center min-h-[70vh]">
+    <main class="flex-grow w-full relative">
+
+        <!-- ===== WIDOK 1: Ekran Wyboru Poziomu ===== -->
+        <div id="login-view" class="view-transition view-visible pt-20 pb-16 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto text-center flex flex-col items-center justify-center min-h-[70vh]">
+            
+            <!-- Dark Mode toggle na ekranie logowania -->
+            <div class="absolute top-4 right-4 sm:top-8 sm:right-8">
+                <button id="theme-toggle-login" class="p-2.5 bg-white dark:bg-slate-800 rounded-full shadow-sm border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-all focus:outline-none">
+                    <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    <svg class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                </button>
+            </div>
+
             <h1 class="text-4xl md:text-5xl font-bold font-serif text-slate-900 dark:text-slate-100 tracking-tight leading-tight mb-4">
                 Wybierz swój poziom
             </h1>
@@ -72,13 +111,9 @@
                 Dostęp do materiałów wymaga podania hasła.
             </p>
             
-            <div id="login-error" class="hidden w-full max-w-md bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-xl border border-red-200 dark:border-red-800 mb-6 font-medium">
-                Niepoprawne hasło! Spróbuj ponownie.
-            </div>
+            <div id="login-error" class="hidden w-full max-w-md bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-xl border border-red-200 dark:border-red-800 mb-6 font-medium"></div>
 
-            <!-- Karty wyboru -->
             <div id="level-selection" class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl">
-                <!-- Karta Podstawa -->
                 <button data-level="Podstawa" class="level-btn group relative bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-sm hover:shadow-md border border-slate-200 dark:border-slate-700 transition-all text-left overflow-hidden">
                     <div class="absolute inset-0 bg-indigo-50 dark:bg-indigo-900/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                     <div class="relative z-10">
@@ -87,8 +122,6 @@
                         <p class="text-slate-500 dark:text-slate-400 text-sm">Baza wiedzy, streszczenia i motywy na egzamin podstawowy.</p>
                     </div>
                 </button>
-                
-                <!-- Karta Rozszerzenie -->
                 <button data-level="Rozszerzenie" class="level-btn group relative bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-sm hover:shadow-md border border-slate-200 dark:border-slate-700 transition-all text-left overflow-hidden">
                     <div class="absolute inset-0 bg-purple-50 dark:bg-purple-900/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                     <div class="relative z-10">
@@ -99,9 +132,8 @@
                 </button>
             </div>
 
-            <!-- Formularz hasła (domyślnie ukryty) -->
-            <div id="password-form" class="hidden w-full max-w-md bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 fade-in">
-                <h3 id="password-title" class="text-xl font-bold text-slate-900 dark:text-white mb-6">Wpisz hasło dla poziomu</h3>
+            <div id="password-form" class="hidden w-full max-w-md bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700">
+                <h3 id="password-title" class="text-xl font-bold text-slate-900 dark:text-white mb-6">Wpisz hasło</h3>
                 <input type="password" id="password-input" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all mb-4 text-center text-lg" placeholder="••••••••">
                 <div class="flex gap-3">
                     <button id="cancel-login-btn" class="flex-1 py-3 px-4 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl font-medium hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">Wróć</button>
@@ -110,23 +142,16 @@
             </div>
         </div>
 
-        <!-- SPA: Główny widok (ukryty za hasłem) -->
-        <div id="home-view" class="hidden">
-            <!-- Nowy Hero Section: Clean & Minimalist ze wsparciem Dark Mode -->
+        <!-- ===== WIDOK 2: Siatka artykułów ===== -->
+        <div id="home-view" class="view-transition view-hidden">
             <header class="pt-16 pb-12 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto text-center relative">
-                
-                <!-- Pasek nawigacyjny u góry -->
                 <div class="flex justify-between items-center w-full mb-8">
                     <button id="back-to-levels-btn" class="inline-flex items-center text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors font-medium">
                         <svg class="mr-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                         Zmień poziom
                     </button>
-
-                    <!-- Przełącznik Dark Mode -->
                     <button id="theme-toggle-home" class="p-2.5 bg-white dark:bg-slate-800 rounded-full shadow-sm border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-all focus:outline-none">
-                        <!-- Słońce dla Dark Mode (aby włączyć jasny) -->
                         <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                        <!-- Księżyc dla Light Mode (aby włączyć ciemny) -->
                         <svg class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
                     </button>
                 </div>
@@ -140,9 +165,7 @@
                 
                 <div class="mt-12 max-w-xl mx-auto relative group">
                     <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
-                        <svg class="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                        </svg>
+                        <svg class="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                     </div>
                     <input type="text" id="search-input" class="block w-full pl-12 pr-4 min-h-[56px] rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm focus:border-indigo-400 dark:focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 dark:focus:ring-indigo-900/30 sm:text-lg text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800 transition-all outline-none" placeholder="Szukaj notatki...">
                 </div>
@@ -150,43 +173,55 @@
 
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
                 <div class="mb-10">
-                    <nav id="category-tabs" class="flex flex-wrap justify-center gap-2 md:gap-3" aria-label="Tabs">
-                        <!-- Zakładki renderowane przez app.js -->
-                    </nav>
+                    <nav id="category-tabs" class="flex flex-wrap justify-center gap-2 md:gap-3" aria-label="Tabs"></nav>
                 </div>
-                
-                <div id="posts-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                </div>
-                
+                <div id="posts-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
                 <div id="no-results" class="hidden text-center py-20">
-                    <p class="text-slate-500 dark:text-slate-400 text-lg">Brak wyników do wyświetlenia.</p>
+                    <svg class="w-16 h-16 mx-auto text-slate-300 dark:text-slate-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    <p class="text-slate-500 dark:text-slate-400 text-lg font-medium">Brak wyników do wyświetlenia.</p>
+                    <p class="text-slate-400 dark:text-slate-500 text-sm mt-1">Spróbuj zmienić kategorię lub wpisać inne hasło.</p>
                 </div>
             </div>
         </div>
 
-        <!-- SPA: Widok artykułu -->
-        <div id="article-view" class="hidden relative pb-20">
-            <!-- Przyklejony górny pasek nawigacji artykułu -->
-            <div class="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm transition-colors duration-300">
+        <!-- ===== WIDOK 3: Artykuł ===== -->
+        <div id="article-view" class="view-transition view-hidden relative pb-20">
+            <div class="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm transition-colors duration-300 no-print">
                 <div class="max-w-4xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
                     <button id="back-btn" class="inline-flex items-center text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium min-h-[44px] px-2 transition-colors focus:outline-none">
                         <svg class="mr-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                         Wróć do materiałów
                     </button>
-                    <!-- Przełącznik Dark Mode w Navbarze -->
-                    <button id="theme-toggle-article" class="p-2 bg-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors focus:outline-none min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
-                        <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                        <svg class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <!-- Przycisk Drukuj -->
+                        <button id="print-btn" class="p-2 bg-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors focus:outline-none min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                        </button>
+                        <!-- Dark Mode -->
+                        <button id="theme-toggle-article" class="p-2 bg-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors focus:outline-none min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
+                            <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                            <svg class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                        </button>
+                    </div>
                 </div>
             </div>
-
-            <!-- Treść artykułu generowana dynamicznie w app.js -->
             <div id="article-content"></div>
         </div>
+
+        <!-- ===== WIDOK 4: Strona 404 ===== -->
+        <div id="not-found-view" class="view-transition view-hidden pt-20 pb-16 px-4 text-center flex flex-col items-center justify-center min-h-[60vh]">
+            <svg class="w-24 h-24 text-slate-300 dark:text-slate-600 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <h2 class="text-3xl font-bold font-serif text-slate-900 dark:text-white mb-3">Nie znaleziono strony</h2>
+            <p class="text-slate-500 dark:text-slate-400 mb-8">Strona, której szukasz, nie istnieje lub została przeniesiona.</p>
+            <a href="#/" class="inline-flex items-center px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-colors shadow-sm">
+                <svg class="mr-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0h4"></path></svg>
+                Wróć na stronę główną
+            </a>
+        </div>
+
     </main>
 
-    <footer class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 mt-auto py-8 transition-colors duration-300">
+    <footer class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 mt-auto py-8 transition-colors duration-300 no-print">
         <p class="text-center text-slate-500 dark:text-slate-400 text-sm font-medium">&copy; 2026 Nauczyciel Języka Polskiego.</p>
     </footer>
 
