@@ -2,5 +2,5 @@
   "title": "obraz",
   "category": "obraz",
   "thumbnail": "/images/pisze_kartka.jpg",
-  "content": "obraz"
+  "content": "<details>\n  <summary>Z jakiej lektury pochodzi Wokulski?</summary>\n  <p>Oczywiście, że z Lalki autorstwa Bolesława Prusa.</p>\n</details>"
 }
