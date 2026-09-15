@@ -210,7 +210,14 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    cancelLoginBtn.addEventListener('click', () => { window.location.hash = '#/'; });
+    cancelLoginBtn.addEventListener('click', () => {
+        levelSelection.classList.remove('hidden');
+        passwordForm.classList.add('hidden');
+        loginError.classList.add('hidden');
+        currentLevel = '';
+        window.location.hash = '#/';
+    });
+    
     backToLevelsBtn.addEventListener('click', () => { window.location.hash = '#/'; });
     
     const logoutBtn = document.getElementById("logout-btn");
