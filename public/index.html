@@ -85,11 +85,12 @@
         html.dark summary { color: #818cf8; }
         summary::-webkit-details-marker { display: none; }
         summary::after {
-            content: "+";
-            font-size: 1.5rem;
+            content: "▼";
+            font-size: 0.8em;
             transition: transform 0.3s;
+            margin-left: 0.5rem;
         }
-        details[open] summary::after { transform: rotate(45deg); }
+        details[open] summary::after { transform: rotate(180deg); }
         details[open] { background: #e0e7ff; border-color: #c7d2fe; }
         html.dark details[open] { background: #312e81; border-color: #4338ca; }
         details p { margin-top: 1rem; margin-bottom: 0; }
@@ -207,10 +208,16 @@
         <div id="home-view" class="hidden block">
             <header class="pt-16 pb-12 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto text-center relative w-full">
                 <div class="flex justify-between items-center w-full mb-8">
-                    <button id="back-to-levels-btn" class="inline-flex items-center text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors font-medium">
-                        <svg class="mr-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                        Zmień poziom
-                    </button>
+                    <div class="flex items-center gap-4">
+                        <button id="back-to-levels-btn" class="inline-flex items-center text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors font-medium">
+                            <svg class="mr-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                            Zmień poziom
+                        </button>
+                        <button id="logout-btn" class="inline-flex items-center text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 transition-colors font-medium text-sm">
+                            <svg class="mr-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                            Wyloguj
+                        </button>
+                    </div>
                     <button id="theme-toggle-home" class="p-2.5 bg-white dark:bg-slate-800 rounded-full shadow-sm border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-all focus:outline-none">
                         <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                         <svg class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>

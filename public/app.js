@@ -212,6 +212,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     cancelLoginBtn.addEventListener('click', () => { window.location.hash = '#/'; });
     backToLevelsBtn.addEventListener('click', () => { window.location.hash = '#/'; });
+    
+    const logoutBtn = document.getElementById("logout-btn");
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            localStorage.removeItem('pass_Podstawa');
+            localStorage.removeItem('pass_Rozszerzenie');
+            window.location.hash = '#/';
+        });
+    }
+
     if (backBtn) backBtn.addEventListener('click', () => { window.location.hash = `#/${currentLevel}`; });
     if (printBtn) printBtn.addEventListener('click', () => { window.print(); });
 
