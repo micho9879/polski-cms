@@ -36,6 +36,7 @@
                   label: 'Hasła dostępu',
                   file: 'public/data/settings.json',
                   fields: [
+                    { label: 'Hasło - Szkoła Podstawowa', name: 'password_sp', widget: 'string', required: true },
                     { label: 'Hasło - Matura Podstawowa', name: 'password_podstawa', widget: 'string', required: true },
                     { label: 'Hasło - Matura Rozszerzona', name: 'password_rozszerzenie', widget: 'string', required: true }
                   ]
@@ -54,8 +55,22 @@
               ]
             },
             {
+              name: 'notatki_sp',
+              label: 'Notatki - Szkoła Podstawowa',
+              folder: 'public/data/notatki_sp',
+              create: true,
+              extension: 'json',
+              format: 'json',
+              fields: [
+                { label: 'Tytuł', name: 'title', widget: 'string' },
+                { label: 'Kategoria', name: 'category', widget: 'relation', collection: 'kategorie', search_fields: ['title'], value_field: 'title', display_fields: ['title'], required: true },
+                { label: 'Miniaturka', name: 'thumbnail', widget: 'image', required: false },
+                { label: 'Treść', name: 'content', widget: 'markdown' }
+              ]
+            },
+            {
               name: 'notatki_podstawa',
-              label: 'Notatki - Podstawa',
+              label: 'Notatki - Matura Podstawa',
               folder: 'public/data/notatki_podstawa',
               create: true,
               extension: 'json',
@@ -69,7 +84,7 @@
             },
             {
               name: 'notatki_rozszerzenie',
-              label: 'Notatki - Rozszerzenie',
+              label: 'Notatki - Matura Rozszerzenie',
               folder: 'public/data/notatki_rozszerzenie',
               create: true,
               extension: 'json',

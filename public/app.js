@@ -140,7 +140,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const slug = decodeURIComponent(parts[3]);
             if (level && slug) { requireAuth(level, () => loadArticleRoute(level, slug)); return; }
         }
-        if (hash === '#/Podstawa' || hash === '#/Rozszerzenie') {
+        if (hash === '#/Podstawa' || hash === '#/Rozszerzenie' || hash === '#/SP') {
             const level = hash.replace('#/', '');
             requireAuth(level, () => loadGridRoute(level));
             return;
@@ -183,7 +183,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function validateAndProceed(level, savedPass, onSuccess) {
-        const correct = level === 'Podstawa' ? settingsData?.password_podstawa : settingsData?.password_rozszerzenie;
+        let correct;
+        if (level === 'Podstawa') correct = settingsData?.password_podstawa;
+        else if (level === 'Rozszerzenie') correct = settingsData?.password_rozszerzenie;
+        else if (level === 'SP') correct = settingsData?.password_sp;
+
         if (savedPass === correct) {
             onSuccess();
         } else {
@@ -202,7 +206,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 currentLevel = level;
                 levelSelection.classList.add('hidden');
                 passwordForm.classList.remove('hidden');
-                passwordTitle.textContent = `Hasło: Matura ${currentLevel}`;
+                
+                let titleLabel = currentLevel;
+                if (currentLevel === 'SP') titleLabel = 'Egzamin Ósmoklasisty';
+                else if (currentLevel === 'Podstawa') titleLabel = 'Matura Podstawowa';
+                else if (currentLevel === 'Rozszerzenie') titleLabel = 'Matura Rozszerzona';
+                
+                passwordTitle.textContent = `Hasło: ${titleLabel}`;
                 passwordInput.value = '';
                 passwordInput.focus();
                 loginError.classList.add('hidden');
@@ -225,6 +235,7 @@ document.addEventListener("DOMContentLoaded", () => {
         logoutBtn.addEventListener('click', () => {
             localStorage.removeItem('pass_Podstawa');
             localStorage.removeItem('pass_Rozszerzenie');
+            localStorage.removeItem('pass_SP');
             window.location.hash = '#/';
         });
     }
@@ -261,7 +272,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function checkPassword(entered) {
-        let correct = currentLevel === 'Podstawa' ? settingsData?.password_podstawa : settingsData?.password_rozszerzenie;
+        let correct;
+        if (currentLevel === 'Podstawa') correct = settingsData?.password_podstawa;
+        else if (currentLevel === 'Rozszerzenie') correct = settingsData?.password_rozszerzenie;
+        else if (currentLevel === 'SP') correct = settingsData?.password_sp;
+        
         submitLoginBtn.textContent = 'Wejdź';
         submitLoginBtn.disabled = false;
         
@@ -280,10 +295,15 @@ document.addEventListener("DOMContentLoaded", () => {
     function loadGridRoute(level) {
         currentLevel = level;
         showView(homeView);
-        if (heroTitle) heroTitle.textContent = `Matura ${level}`;
-        if (heroSubtitle) heroSubtitle.textContent = level === 'Podstawa'
-            ? 'Baza wiedzy, streszczenia i motywy na egzamin podstawowy.'
-            : 'Zaawansowane analizy, epoki i materiały dla rozszerzenia.';
+        
+        let title = '';
+        let subtitle = '';
+        if (level === 'Podstawa') { title = 'Matura Podstawowa'; subtitle = 'Baza wiedzy i streszczenia na egzamin podstawowy.'; }
+        else if (level === 'Rozszerzenie') { title = 'Matura Rozszerzona'; subtitle = 'Zaawansowane analizy i materiały dla rozszerzenia.'; }
+        else if (level === 'SP') { title = 'Egzamin Ósmoklasisty'; subtitle = 'Lektury i zagadnienia do szkoły podstawowej.'; }
+        
+        if (heroTitle) heroTitle.textContent = title;
+        if (heroSubtitle) heroSubtitle.textContent = subtitle;
         if (searchInput) searchInput.value = '';
         fetchDataForLevel(level);
     }
@@ -313,7 +333,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         showSkeletons();
-        const folder = level === 'Podstawa' ? 'notatki_podstawa' : 'notatki_rozszerzenie';
+        let folder = '';
+        if (level === 'Podstawa') folder = 'notatki_podstawa';
+        else if (level === 'Rozszerzenie') folder = 'notatki_rozszerzenie';
+        else if (level === 'SP') folder = 'notatki_sp';
 
         fetch(`https://api.github.com/repos/micho9879/polski-cms/contents/public/data/${folder}`, { cache: 'no-cache' })
             .then(res => {
@@ -448,7 +471,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 </button>
                 <div class="p-6 flex flex-col flex-grow cursor-pointer" onclick="window.location.hash = '#/artykul/${currentLevel}/${post.slug}'">
                     <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">${cat}</span>
-                    <h3 class="text-xl font-bold font-serif text-slate-900 dark:text-slate-100 mb-3 leading-snug line-clamp-2">${post.title}</h3>
+                    <h3 class="text-xl font-bold font-serif text-slate-900 dark:text-white mb-3 leading-snug line-clamp-2">${post.title}</h3>
                     <p class="text-slate-600 dark:text-slate-400 text-sm flex-grow line-clamp-3 leading-relaxed">${excerpt}</p>
                 </div>`;
                 
@@ -475,7 +498,11 @@ document.addEventListener("DOMContentLoaded", () => {
         const cached = allPosts.find(p => p.slug === slug);
         if (cached) { renderArticle(cached); return; }
 
-        const folder = level === 'Podstawa' ? 'notatki_podstawa' : 'notatki_rozszerzenie';
+        let folder = '';
+        if (level === 'Podstawa') folder = 'notatki_podstawa';
+        else if (level === 'Rozszerzenie') folder = 'notatki_rozszerzenie';
+        else if (level === 'SP') folder = 'notatki_sp';
+        
         fetch(`https://api.github.com/repos/micho9879/polski-cms/contents/public/data/${folder}/${slug}.json`, { cache: 'no-cache', headers: { 'Accept': 'application/vnd.github.v3.raw' } })
             .then(r => r.ok ? r.json() : null)
             .then(post => {
