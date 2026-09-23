@@ -12,6 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const articleView = document.getElementById("article-view");
     const articleContent = document.getElementById("article-content");
     const categoryTabs = document.getElementById("category-tabs");
+    const subcategoryTabs = document.getElementById("subcategory-tabs");
     const searchInput = document.getElementById("search-input");
     const noResults = document.getElementById("no-results");
     const backBtn = document.getElementById("back-btn");
@@ -23,6 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let allPosts = [];
     let activeCategory = 'Wszystkie';
+    let activeSubcategory = 'Wszystkie';
     let currentLevel = '';
     let settingsData = null;
     let lastFetchedLevel = '';
@@ -372,7 +374,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!categoryTabs) return;
         const catCounts = new Map();
         
-        // Zliczamy ulubione z AKTUALNEGO poziomu
         let favCount = 0;
         posts.forEach(p => {
             if (p.category) catCounts.set(p.category, (catCounts.get(p.category) || 0) + 1);
@@ -381,13 +382,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
         categoryTabs.innerHTML = '';
         activeCategory = 'Wszystkie';
+        activeSubcategory = 'Wszystkie';
+        
         const baseClass = 'min-h-[44px] px-5 py-2 rounded-xl text-sm font-medium transition-colors border';
         const activeClass = 'bg-slate-900 dark:bg-indigo-500 text-white border-slate-900 dark:border-indigo-500';
         const inactiveClass = 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700/50';
 
-        // Zakładka Wszystkie
         createTab('Wszystkie', posts.length);
-        // Zakładka Ulubione
         if (favCount > 0) createTab('Ulubione', favCount, '❤️');
         
         catCounts.forEach((count, category) => {
@@ -401,12 +402,70 @@ document.addEventListener("DOMContentLoaded", () => {
             btn.className = `${baseClass} ${name === activeCategory ? activeClass : inactiveClass}`;
             btn.addEventListener('click', () => {
                 activeCategory = name;
+                activeSubcategory = 'Wszystkie'; // Reset podkategorii przy zmianie głównej
+                
                 Array.from(categoryTabs.children).forEach(c => {
                     c.className = `${baseClass} ${c.dataset.cat === activeCategory ? activeClass : inactiveClass}`;
                 });
+                renderSubcategoryTabs(posts);
                 filterPosts();
             });
             categoryTabs.appendChild(btn);
+        }
+        
+        renderSubcategoryTabs(posts);
+    }
+
+    function renderSubcategoryTabs(posts) {
+        if (!subcategoryTabs) return;
+        subcategoryTabs.innerHTML = '';
+        
+        if (activeCategory === 'Wszystkie' || activeCategory === 'Ulubione') {
+            subcategoryTabs.classList.add('hidden');
+            return;
+        }
+
+        const subCounts = new Map();
+        let totalInCat = 0;
+        
+        posts.forEach(p => {
+            if (p.category === activeCategory) {
+                totalInCat++;
+                if (p.subcategory) {
+                    subCounts.set(p.subcategory, (subCounts.get(p.subcategory) || 0) + 1);
+                }
+            }
+        });
+
+        if (subCounts.size === 0) {
+            subcategoryTabs.classList.add('hidden');
+            return;
+        }
+
+        subcategoryTabs.classList.remove('hidden');
+        
+        const baseClass = 'px-4 py-1.5 rounded-full text-xs font-medium transition-colors border';
+        const activeClass = 'bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800';
+        const inactiveClass = 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700/50';
+
+        createSubTab('Wszystkie', totalInCat);
+        subCounts.forEach((count, subName) => {
+            createSubTab(subName, count);
+        });
+
+        function createSubTab(name, count) {
+            const btn = document.createElement('button');
+            btn.dataset.sub = name;
+            btn.innerHTML = `${name} <span class="opacity-60 ml-1">(${count})</span>`;
+            btn.className = `${baseClass} ${name === activeSubcategory ? activeClass : inactiveClass}`;
+            btn.addEventListener('click', () => {
+                activeSubcategory = name;
+                Array.from(subcategoryTabs.children).forEach(c => {
+                    c.className = `${baseClass} ${c.dataset.sub === activeSubcategory ? activeClass : inactiveClass}`;
+                });
+                filterPosts();
+            });
+            subcategoryTabs.appendChild(btn);
         }
     }
 
@@ -414,15 +473,26 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!searchInput || !postsGrid) return;
         const query = searchInput.value.toLowerCase();
         let visible = 0;
+        
         Array.from(postsGrid.children).forEach(card => {
             const isFavTab = activeCategory === 'Ulubione';
-            const matchesCategory = isFavTab ? favorites.includes(card.dataset.slug) : (activeCategory === 'Wszystkie' || card.dataset.category === activeCategory);
+            
+            // Warunek kategorii głównej
+            let matchesCategory = isFavTab ? favorites.includes(card.dataset.slug) : (activeCategory === 'Wszystkie' || card.dataset.category === activeCategory);
+            
+            // Warunek podkategorii
+            let matchesSubcategory = true;
+            if (!isFavTab && activeCategory !== 'Wszystkie' && activeSubcategory !== 'Wszystkie') {
+                matchesSubcategory = (card.dataset.subcategory === activeSubcategory);
+            }
+
             const matchesSearch = card.dataset.search.includes(query);
             
-            const ok = matchesCategory && matchesSearch;
+            const ok = matchesCategory && matchesSubcategory && matchesSearch;
             card.classList.toggle('hidden', !ok);
             if (ok) visible++;
         });
+        
         if (noResults) noResults.classList.toggle('hidden', visible > 0);
     }
 
@@ -451,6 +521,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const card = document.createElement('article');
             const cat = post.category || 'Inne';
             card.dataset.category = cat;
+            if (post.subcategory) card.dataset.subcategory = post.subcategory;
             card.dataset.slug = post.slug;
             card.dataset.search = (post.title + ' ' + (post.content || '')).toLowerCase();
             card.className = 'group bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 transition-all flex flex-col overflow-hidden hover:shadow-md dark:hover:border-slate-700 relative';
@@ -461,6 +532,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const isFav = favorites.includes(post.slug);
             const heartColor = isFav ? 'text-red-500 fill-current' : 'text-white drop-shadow-md';
+            
+            const subBadge = post.subcategory ? `<span class="ml-2 inline-block px-2 py-0.5 bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 rounded-md text-[10px] font-bold tracking-wider">${post.subcategory}</span>` : '';
 
             card.innerHTML = `
                 <div class="h-48 overflow-hidden border-b border-slate-100 dark:border-slate-800 relative cursor-pointer" onclick="window.location.hash = '#/artykul/${currentLevel}/${post.slug}'">
@@ -470,7 +543,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     <svg class="w-5 h-5 ${heartColor} transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
                 </button>
                 <div class="p-6 flex flex-col flex-grow cursor-pointer" onclick="window.location.hash = '#/artykul/${currentLevel}/${post.slug}'">
-                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">${cat}</span>
+                    <div class="flex items-center mb-2">
+                        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">${cat}</span>
+                        ${subBadge}
+                    </div>
                     <h3 class="text-xl font-bold font-serif text-slate-900 dark:text-white mb-3 leading-snug line-clamp-2">${post.title}</h3>
                     <p class="text-slate-600 dark:text-slate-400 text-sm flex-grow line-clamp-3 leading-relaxed">${excerpt}</p>
                 </div>`;
@@ -552,6 +628,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         // Finalny HTML
+        const subBadgeHtml = post.subcategory ? `<span class="ml-3 inline-block px-2.5 py-1 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400 rounded-md text-xs font-bold tracking-wider align-middle">${post.subcategory}</span>` : '';
+        
         articleContent.innerHTML = `
             <div class="max-w-4xl mx-auto bg-white dark:bg-slate-900 p-8 sm:p-12 md:p-16 rounded-[2rem] shadow-sm dark:shadow-none border border-slate-200 dark:border-slate-800 mt-6 sm:mt-10 mb-20 relative z-10 transition-colors duration-300">
                 <header class="mb-10 text-center relative">
@@ -559,7 +637,10 @@ document.addEventListener("DOMContentLoaded", () => {
                         <svg class="w-6 h-6 ${heartColor} transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
                     </button>
                     
-                    <span class="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">${cat}</span>
+                    <div class="flex items-center justify-center">
+                        <span class="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">${cat}</span>
+                        ${subBadgeHtml}
+                    </div>
                     <h1 class="text-4xl md:text-5xl font-bold font-serif text-slate-900 dark:text-white mt-4 mb-6 leading-tight">${post.title}</h1>
                     <div class="flex justify-center items-center text-slate-500 dark:text-slate-400 text-sm font-medium">
                         <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
