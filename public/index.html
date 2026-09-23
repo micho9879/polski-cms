@@ -156,11 +156,19 @@
     <main class="flex-grow w-full block">
 
         <!-- ===== WIDOK 1: Ekran Wyboru Poziomu ===== -->
-        <div id="login-view" class="hidden pt-20 pb-16 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto text-center flex flex-col items-center justify-center min-h-[70vh]">
+        <div id="login-view" class="hidden pt-6 pb-8 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto text-center flex flex-col items-center justify-center min-h-[90vh]">
             
-            <!-- Dark Mode toggle na ekranie logowania -->
-            <div class="absolute top-4 right-4 sm:top-8 sm:right-8">
-                <button id="theme-toggle-login" class="p-2.5 bg-white dark:bg-slate-800 rounded-full shadow-sm border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-all focus:outline-none">
+            <!-- Górny pasek: Logo i Dark Mode -->
+            <div class="w-full flex justify-between items-start sm:items-center mb-6">
+                <div class="w-10 hidden sm:block"></div> <!-- Pusty element dla balansu na dużych ekranach -->
+                
+                <!-- Logo -->
+                <div class="bg-white p-2 rounded-2xl shadow-sm border border-slate-100 w-24 h-24 md:w-32 md:h-32 flex items-center justify-center shrink-0 mx-auto sm:mx-0">
+                    <img src="logo.png" alt="TLW Korepetycje" class="w-full h-full object-contain rounded-xl">
+                </div>
+
+                <!-- Dark Mode toggle -->
+                <button id="theme-toggle-login" class="p-2.5 bg-white dark:bg-slate-800 rounded-full shadow-sm border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-all focus:outline-none absolute right-4 top-4 sm:relative sm:right-auto sm:top-auto">
                     <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                     <svg class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
                 </button>
@@ -227,7 +235,7 @@
         <div id="home-view" class="hidden block">
             <header class="pt-16 pb-12 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto text-center relative w-full">
                 <div class="flex justify-between items-center w-full mb-8">
-                    <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-4 relative z-10">
                         <button id="back-to-levels-btn" class="inline-flex items-center text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors font-medium">
                             <svg class="mr-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                             Zmień poziom
@@ -237,7 +245,14 @@
                             Wyloguj
                         </button>
                     </div>
-                    <button id="theme-toggle-home" class="p-2.5 bg-white dark:bg-slate-800 rounded-full shadow-sm border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-all focus:outline-none">
+                    
+                    <div class="hidden sm:flex items-center justify-center absolute left-1/2 -translate-x-1/2">
+                        <div class="bg-white p-1.5 rounded-2xl shadow-sm border border-slate-100 w-14 h-14 flex items-center justify-center">
+                            <img src="logo.png" alt="TLW Korepetycje" class="w-full h-full object-contain rounded-xl">
+                        </div>
+                    </div>
+
+                    <button id="theme-toggle-home" class="p-2.5 bg-white dark:bg-slate-800 rounded-full shadow-sm border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-all focus:outline-none relative z-10">
                         <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                         <svg class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
                     </button>
@@ -277,11 +292,18 @@
             <div id="progress-bar-container" class="no-print"><div id="progress-bar"></div></div>
             <div class="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm transition-colors duration-300 no-print">
                 <div class="max-w-4xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-                    <button id="back-btn" class="inline-flex items-center text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium min-h-[44px] px-2 transition-colors focus:outline-none">
+                    <button id="back-btn" class="inline-flex items-center text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium min-h-[44px] px-2 transition-colors focus:outline-none relative z-10">
                         <svg class="mr-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                         Wróć
                     </button>
-                    <div class="flex items-center gap-1 sm:gap-2">
+
+                    <div class="hidden sm:flex items-center justify-center absolute left-1/2 -translate-x-1/2">
+                        <div class="bg-white p-1 rounded-xl shadow-sm border border-slate-100 w-10 h-10 flex items-center justify-center">
+                            <img src="logo.png" alt="TLW Korepetycje" class="w-full h-full object-contain rounded-lg">
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-1 sm:gap-2 relative z-10">
                         <!-- Kontrola czcionki -->
                         <button id="font-minus-btn" class="p-2 font-bold bg-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors focus:outline-none rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">A-</button>
                         <button id="font-plus-btn" class="p-2 font-bold bg-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors focus:outline-none rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">A+</button>
