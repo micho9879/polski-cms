@@ -29,6 +29,34 @@ document.addEventListener("DOMContentLoaded", () => {
     let settingsData = null;
     let lastFetchedLevel = '';
     
+    // --- KOLORY TAGÓW ---
+    let tagColors = {};
+    let tagsFetched = false;
+    const colorClasses = {
+        'indigo': { bg: 'bg-indigo-100 dark:bg-indigo-900/60', text: 'text-indigo-700 dark:text-indigo-300', border: 'border-indigo-200 dark:border-indigo-800', badgeBg: 'bg-indigo-50 dark:bg-indigo-900/40', badgeText: 'text-indigo-600 dark:text-indigo-400' },
+        'emerald': { bg: 'bg-emerald-100 dark:bg-emerald-900/60', text: 'text-emerald-700 dark:text-emerald-300', border: 'border-emerald-200 dark:border-emerald-800', badgeBg: 'bg-emerald-50 dark:bg-emerald-900/40', badgeText: 'text-emerald-600 dark:text-emerald-400' },
+        'red': { bg: 'bg-red-100 dark:bg-red-900/60', text: 'text-red-700 dark:text-red-300', border: 'border-red-200 dark:border-red-800', badgeBg: 'bg-red-50 dark:bg-red-900/40', badgeText: 'text-red-600 dark:text-red-400' },
+        'amber': { bg: 'bg-amber-100 dark:bg-amber-900/60', text: 'text-amber-700 dark:text-amber-300', border: 'border-amber-200 dark:border-amber-800', badgeBg: 'bg-amber-50 dark:bg-amber-900/40', badgeText: 'text-amber-600 dark:text-amber-400' },
+        'sky': { bg: 'bg-sky-100 dark:bg-sky-900/60', text: 'text-sky-700 dark:text-sky-300', border: 'border-sky-200 dark:border-sky-800', badgeBg: 'bg-sky-50 dark:bg-sky-900/40', badgeText: 'text-sky-600 dark:text-sky-400' },
+        'fuchsia': { bg: 'bg-fuchsia-100 dark:bg-fuchsia-900/60', text: 'text-fuchsia-700 dark:text-fuchsia-300', border: 'border-fuchsia-200 dark:border-fuchsia-800', badgeBg: 'bg-fuchsia-50 dark:bg-fuchsia-900/40', badgeText: 'text-fuchsia-600 dark:text-fuchsia-400' },
+        'slate': { bg: 'bg-slate-100 dark:bg-slate-800', text: 'text-slate-700 dark:text-slate-300', border: 'border-slate-200 dark:border-slate-700', badgeBg: 'bg-slate-100 dark:bg-slate-800/60', badgeText: 'text-slate-600 dark:text-slate-400' }
+    };
+    
+    function fetchTagsAndColors() {
+        if (tagsFetched) return Promise.resolve();
+        return fetch('https://api.github.com/repos/micho9879/polski-cms/contents/public/data/podkategorie', { cache: 'no-cache' })
+            .then(res => { if (!res.ok) throw new Error(); return res.json(); })
+            .then(files => {
+                const jsonFiles = Array.isArray(files) ? files.filter(f => f.name.endsWith('.json')) : [];
+                return Promise.all(jsonFiles.map(fi => fetch(`${fi.download_url}?v=${fi.sha}`).then(r => r.json())));
+            })
+            .then(tags => {
+                tags.forEach(t => { if(t.title && t.color) tagColors[t.title] = t.color; });
+                tagsFetched = true;
+            })
+            .catch(() => { tagsFetched = true; }); // fallback
+    }
+
     let favorites = JSON.parse(localStorage.getItem('polski_favorites') || '[]');
     function toggleFavorite(slug) {
         if (favorites.includes(slug)) {
@@ -340,33 +368,35 @@ document.addEventListener("DOMContentLoaded", () => {
         else if (level === 'Rozszerzenie') folder = 'notatki_rozszerzenie';
         else if (level === 'SP') folder = 'notatki_sp';
 
-        fetch(`https://api.github.com/repos/micho9879/polski-cms/contents/public/data/${folder}`, { cache: 'no-cache' })
-            .then(res => {
-                if (res.status === 404) return [];
-                if (!res.ok) throw new Error('API');
-                return res.json();
-            })
-            .then(files => {
-                const jsonFiles = Array.isArray(files) ? files.filter(f => f.name.endsWith('.json')) : [];
-                return Promise.all(jsonFiles.map(fi =>
-                    fetch(`${fi.download_url}?v=${fi.sha}`, { cache: 'no-cache' })
-                        .then(r => r.ok ? r.json().then(d => ({ ...d, slug: fi.name.replace('.json', '') })) : null)
-                        .catch(() => null)
-                ));
-            })
-            .then(posts => {
-                allPosts = posts.filter(p => p && p.title);
-                lastFetchedLevel = level;
-                renderTabs(allPosts);
-                renderInitialGrid(allPosts);
-            })
-            .catch(() => {
-                if (postsGrid) postsGrid.innerHTML = `
-                    <div class="col-span-full p-8 text-center bg-red-50 dark:bg-red-900/20 rounded-2xl border border-red-200 dark:border-red-800">
-                        <h3 class="text-red-700 dark:text-red-400 font-bold mb-2">Błąd ładowania</h3>
-                        <p class="text-red-600 dark:text-red-500 text-sm">Nie udało się załadować notatek. Spróbuj odświeżyć stronę za chwilę.</p>
-                    </div>`;
-            });
+        fetchTagsAndColors().then(() => {
+            fetch(`https://api.github.com/repos/micho9879/polski-cms/contents/public/data/${folder}`, { cache: 'no-cache' })
+                .then(res => {
+                    if (res.status === 404) return [];
+                    if (!res.ok) throw new Error('API');
+                    return res.json();
+                })
+                .then(files => {
+                    const jsonFiles = Array.isArray(files) ? files.filter(f => f.name.endsWith('.json')) : [];
+                    return Promise.all(jsonFiles.map(fi =>
+                        fetch(`${fi.download_url}?v=${fi.sha}`, { cache: 'no-cache' })
+                            .then(r => r.ok ? r.json().then(d => ({ ...d, slug: fi.name.replace('.json', '') })) : null)
+                            .catch(() => null)
+                    ));
+                })
+                .then(posts => {
+                    allPosts = posts.filter(p => p && p.title);
+                    lastFetchedLevel = level;
+                    renderTabs(allPosts);
+                    renderInitialGrid(allPosts);
+                })
+                .catch(() => {
+                    if (postsGrid) postsGrid.innerHTML = `
+                        <div class="col-span-full p-8 text-center bg-red-50 dark:bg-red-900/20 rounded-2xl border border-red-200 dark:border-red-800">
+                            <h3 class="text-red-700 dark:text-red-400 font-bold mb-2">Błąd ładowania</h3>
+                            <p class="text-red-600 dark:text-red-500 text-sm">Nie udało się załadować notatek. Spróbuj odświeżyć stronę za chwilę.</p>
+                        </div>`;
+                });
+        });
     }
 
     // --- ZAKŁADKI Z LICZNIKIEM + ULUBIONE ---
@@ -431,9 +461,10 @@ document.addEventListener("DOMContentLoaded", () => {
         posts.forEach(p => {
             if (p.category === activeCategory) {
                 totalInCat++;
-                if (p.subcategory) {
-                    subCounts.set(p.subcategory, (subCounts.get(p.subcategory) || 0) + 1);
-                }
+                const tags = Array.isArray(p.subcategory) ? p.subcategory : (p.subcategory ? [p.subcategory] : []);
+                tags.forEach(tag => {
+                    subCounts.set(tag, (subCounts.get(tag) || 0) + 1);
+                });
             }
         });
 
@@ -445,7 +476,6 @@ document.addEventListener("DOMContentLoaded", () => {
         subcategoryTabs.classList.remove('hidden');
         
         const baseClass = 'px-4 py-1.5 rounded-full text-xs font-medium transition-colors border';
-        const activeClass = 'bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800';
         const inactiveClass = 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700/50';
 
         createSubTab('Wszystkie', totalInCat);
@@ -457,12 +487,21 @@ document.addEventListener("DOMContentLoaded", () => {
             const btn = document.createElement('button');
             btn.dataset.sub = name;
             btn.innerHTML = `${name} <span class="opacity-60 ml-1">(${count})</span>`;
-            btn.className = `${baseClass} ${name === activeSubcategory ? activeClass : inactiveClass}`;
+            
+            const color = tagColors[name] || 'indigo';
+            const c = colorClasses[color] || colorClasses['indigo'];
+            const isActive = name === activeSubcategory;
+            
+            if (name === 'Wszystkie') {
+                const activeAllClass = 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 border-slate-900 dark:border-slate-100';
+                btn.className = `${baseClass} ${isActive ? activeAllClass : inactiveClass}`;
+            } else {
+                btn.className = `${baseClass} ${isActive ? (c.bg + ' ' + c.text + ' ' + c.border) : inactiveClass}`;
+            }
+
             btn.addEventListener('click', () => {
                 activeSubcategory = name;
-                Array.from(subcategoryTabs.children).forEach(c => {
-                    c.className = `${baseClass} ${c.dataset.sub === activeSubcategory ? activeClass : inactiveClass}`;
-                });
+                renderSubcategoryTabs(posts);
                 filterPosts();
             });
             subcategoryTabs.appendChild(btn);
@@ -483,7 +522,8 @@ document.addEventListener("DOMContentLoaded", () => {
             // Warunek podkategorii
             let matchesSubcategory = true;
             if (!isFavTab && activeCategory !== 'Wszystkie' && activeSubcategory !== 'Wszystkie') {
-                matchesSubcategory = (card.dataset.subcategory === activeSubcategory);
+                const cardTags = card.dataset.subcategory ? card.dataset.subcategory.split(',') : [];
+                matchesSubcategory = cardTags.includes(activeSubcategory);
             }
 
             const matchesSearch = card.dataset.search.includes(query);
@@ -521,7 +561,10 @@ document.addEventListener("DOMContentLoaded", () => {
             const card = document.createElement('article');
             const cat = post.category || 'Inne';
             card.dataset.category = cat;
-            if (post.subcategory) card.dataset.subcategory = post.subcategory;
+            
+            const cardTags = Array.isArray(post.subcategory) ? post.subcategory : (post.subcategory ? [post.subcategory] : []);
+            if (cardTags.length > 0) card.dataset.subcategory = cardTags.join(',');
+            
             card.dataset.slug = post.slug;
             card.dataset.search = (post.title + ' ' + (post.content || '')).toLowerCase();
             card.className = 'group bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 transition-all flex flex-col overflow-hidden hover:shadow-md dark:hover:border-slate-700 relative';
@@ -533,7 +576,12 @@ document.addEventListener("DOMContentLoaded", () => {
             const isFav = favorites.includes(post.slug);
             const heartColor = isFav ? 'text-red-500 fill-current' : 'text-white drop-shadow-md';
             
-            const subBadge = post.subcategory ? `<span class="ml-2 inline-block px-2 py-0.5 bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 rounded-md text-[10px] font-bold tracking-wider">${post.subcategory}</span>` : '';
+            let badgesHtml = '';
+            cardTags.forEach(tag => {
+                const color = tagColors[tag] || 'indigo';
+                const c = colorClasses[color] || colorClasses['indigo'];
+                badgesHtml += `<span class="ml-2 inline-block px-2 py-0.5 ${c.badgeBg} ${c.badgeText} rounded-md text-[10px] font-bold tracking-wider">${tag}</span>`;
+            });
 
             card.innerHTML = `
                 <div class="h-48 overflow-hidden border-b border-slate-100 dark:border-slate-800 relative cursor-pointer" onclick="window.location.hash = '#/artykul/${currentLevel}/${post.slug}'">
@@ -543,9 +591,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     <svg class="w-5 h-5 ${heartColor} transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
                 </button>
                 <div class="p-6 flex flex-col flex-grow cursor-pointer" onclick="window.location.hash = '#/artykul/${currentLevel}/${post.slug}'">
-                    <div class="flex items-center mb-2">
+                    <div class="flex items-center mb-2 flex-wrap gap-y-1">
                         <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">${cat}</span>
-                        ${subBadge}
+                        ${badgesHtml}
                     </div>
                     <h3 class="text-xl font-bold font-serif text-slate-900 dark:text-white mb-3 leading-snug line-clamp-2">${post.title}</h3>
                     <p class="text-slate-600 dark:text-slate-400 text-sm flex-grow line-clamp-3 leading-relaxed">${excerpt}</p>
@@ -579,15 +627,17 @@ document.addEventListener("DOMContentLoaded", () => {
         else if (level === 'Rozszerzenie') folder = 'notatki_rozszerzenie';
         else if (level === 'SP') folder = 'notatki_sp';
         
-        fetch(`https://api.github.com/repos/micho9879/polski-cms/contents/public/data/${folder}/${slug}.json`, { cache: 'no-cache', headers: { 'Accept': 'application/vnd.github.v3.raw' } })
-            .then(r => r.ok ? r.json() : null)
-            .then(post => {
-                if (post) {
-                    post.slug = slug;
-                    renderArticle(post);
-                }
-                else articleContent.innerHTML = `<div class="text-center py-20"><svg class="w-16 h-16 mx-auto text-slate-300 dark:text-slate-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><p class="text-slate-500 text-lg font-medium">Nie znaleziono artykułu</p></div>`;
-            });
+        fetchTagsAndColors().then(() => {
+            fetch(`https://api.github.com/repos/micho9879/polski-cms/contents/public/data/${folder}/${slug}.json`, { cache: 'no-cache', headers: { 'Accept': 'application/vnd.github.v3.raw' } })
+                .then(r => r.ok ? r.json() : null)
+                .then(post => {
+                    if (post) {
+                        post.slug = slug;
+                        renderArticle(post);
+                    }
+                    else articleContent.innerHTML = `<div class="text-center py-20"><svg class="w-16 h-16 mx-auto text-slate-300 dark:text-slate-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><p class="text-slate-500 text-lg font-medium">Nie znaleziono artykułu</p></div>`;
+                });
+        });
     }
 
     function renderArticle(post) {
@@ -628,7 +678,13 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         // Finalny HTML
-        const subBadgeHtml = post.subcategory ? `<span class="ml-3 inline-block px-2.5 py-1 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400 rounded-md text-xs font-bold tracking-wider align-middle">${post.subcategory}</span>` : '';
+        const articleTags = Array.isArray(post.subcategory) ? post.subcategory : (post.subcategory ? [post.subcategory] : []);
+        let badgesHtml = '';
+        articleTags.forEach(tag => {
+            const color = tagColors[tag] || 'indigo';
+            const c = colorClasses[color] || colorClasses['indigo'];
+            badgesHtml += `<span class="ml-2 inline-block px-2.5 py-1 ${c.badgeBg} ${c.badgeText} rounded-md text-xs font-bold tracking-wider align-middle shadow-sm">${tag}</span>`;
+        });
         
         articleContent.innerHTML = `
             <div class="max-w-4xl mx-auto bg-white dark:bg-slate-900 p-8 sm:p-12 md:p-16 rounded-[2rem] shadow-sm dark:shadow-none border border-slate-200 dark:border-slate-800 mt-6 sm:mt-10 mb-20 relative z-10 transition-colors duration-300">
@@ -637,9 +693,9 @@ document.addEventListener("DOMContentLoaded", () => {
                         <svg class="w-6 h-6 ${heartColor} transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
                     </button>
                     
-                    <div class="flex items-center justify-center">
+                    <div class="flex flex-wrap items-center justify-center gap-y-2 mt-2">
                         <span class="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">${cat}</span>
-                        ${subBadgeHtml}
+                        ${badgesHtml}
                     </div>
                     <h1 class="text-4xl md:text-5xl font-bold font-serif text-slate-900 dark:text-white mt-4 mb-6 leading-tight">${post.title}</h1>
                     <div class="flex justify-center items-center text-slate-500 dark:text-slate-400 text-sm font-medium">

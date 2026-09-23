@@ -56,13 +56,14 @@
             },
             {
               name: 'podkategorie',
-              label: 'Podkategorie (np. Obowiązkowe)',
+              label: 'Podkategorie / Tagi',
               folder: 'public/data/podkategorie',
               create: true,
               extension: 'json',
               format: 'json',
               fields: [
-                { label: 'Nazwa Podkategorii', name: 'title', widget: 'string' }
+                { label: 'Nazwa Taga', name: 'title', widget: 'string' },
+                { label: 'Kolor Etykiety', name: 'color', widget: 'select', options: ['indigo', 'emerald', 'red', 'amber', 'sky', 'fuchsia', 'slate'], default: 'indigo' }
               ]
             },
             {
@@ -75,7 +76,7 @@
               fields: [
                 { label: 'Tytuł', name: 'title', widget: 'string' },
                 { label: 'Kategoria Główna', name: 'category', widget: 'relation', collection: 'kategorie', search_fields: ['title'], value_field: 'title', display_fields: ['title'], required: true },
-                { label: 'Podkategoria (opcjonalnie)', name: 'subcategory', widget: 'relation', collection: 'podkategorie', search_fields: ['title'], value_field: 'title', display_fields: ['title'], required: false },
+                { label: 'Tagi / Podkategorie (opcjonalnie)', name: 'subcategory', widget: 'relation', collection: 'podkategorie', search_fields: ['title'], value_field: 'title', display_fields: ['title'], multiple: true, required: false },
                 { label: 'Miniaturka', name: 'thumbnail', widget: 'image', required: false },
                 { label: 'Treść', name: 'content', widget: 'markdown' }
               ]
@@ -90,7 +91,7 @@
               fields: [
                 { label: 'Tytuł', name: 'title', widget: 'string' },
                 { label: 'Kategoria Główna', name: 'category', widget: 'relation', collection: 'kategorie', search_fields: ['title'], value_field: 'title', display_fields: ['title'], required: true },
-                { label: 'Podkategoria (opcjonalnie)', name: 'subcategory', widget: 'relation', collection: 'podkategorie', search_fields: ['title'], value_field: 'title', display_fields: ['title'], required: false },
+                { label: 'Tagi / Podkategorie (opcjonalnie)', name: 'subcategory', widget: 'relation', collection: 'podkategorie', search_fields: ['title'], value_field: 'title', display_fields: ['title'], multiple: true, required: false },
                 { label: 'Miniaturka', name: 'thumbnail', widget: 'image', required: false },
                 { label: 'Treść', name: 'content', widget: 'markdown' }
               ]
@@ -105,7 +106,7 @@
               fields: [
                 { label: 'Tytuł', name: 'title', widget: 'string' },
                 { label: 'Kategoria Główna', name: 'category', widget: 'relation', collection: 'kategorie', search_fields: ['title'], value_field: 'title', display_fields: ['title'], required: true },
-                { label: 'Podkategoria (opcjonalnie)', name: 'subcategory', widget: 'relation', collection: 'podkategorie', search_fields: ['title'], value_field: 'title', display_fields: ['title'], required: false },
+                { label: 'Tagi / Podkategorie (opcjonalnie)', name: 'subcategory', widget: 'relation', collection: 'podkategorie', search_fields: ['title'], value_field: 'title', display_fields: ['title'], multiple: true, required: false },
                 { label: 'Miniaturka', name: 'thumbnail', widget: 'image', required: false },
                 { label: 'Treść', name: 'content', widget: 'markdown' }
               ]
