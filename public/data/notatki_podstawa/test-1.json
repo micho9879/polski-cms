@@ -1,0 +1,11 @@
+{
+  "title": "test 1",
+  "category": "kategoria testowa",
+  "subcategory": [
+    "pod 1",
+    "pod 2",
+    "pod 3"
+  ],
+  "thumbnail": "",
+  "content": "test 1"
+}
