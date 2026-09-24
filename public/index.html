@@ -163,8 +163,8 @@
                 <div class="w-10 hidden sm:block"></div> <!-- Pusty element dla balansu na dużych ekranach -->
                 
                 <!-- Logo -->
-                <div class="bg-white p-2 rounded-2xl shadow-sm border border-slate-100 w-24 h-24 md:w-32 md:h-32 flex items-center justify-center shrink-0 mx-auto sm:mx-0">
-                    <img src="logo.png" alt="TLW Korepetycje" class="w-full h-full object-contain rounded-xl">
+                <div class="bg-white p-3 rounded-[2rem] shadow-md border border-slate-100 w-40 h-40 md:w-56 md:h-56 lg:w-64 lg:h-64 flex items-center justify-center shrink-0 mx-auto sm:mx-0">
+                    <img src="logo.png" alt="TLW Korepetycje" class="w-full h-full object-contain rounded-2xl">
                 </div>
 
                 <!-- Dark Mode toggle -->
@@ -174,51 +174,49 @@
                 </button>
             </div>
 
-            <h1 class="text-4xl md:text-5xl font-bold font-serif text-slate-900 dark:text-slate-100 tracking-tight leading-tight mb-4">
-                Wybierz swój poziom
-            </h1>
-            <p class="text-lg text-slate-600 dark:text-slate-400 mb-12">
-                Dostęp do materiałów wymaga podania hasła.
-            </p>
+            <!-- Miejsce po usuniętych tekstach powitalnych -->
             
-            <div id="login-error" class="hidden w-full max-w-md bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-xl border border-red-200 dark:border-red-800 mb-6 font-medium"></div>
+            <div id="login-error" class="hidden w-full max-w-md bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-xl border border-red-200 dark:border-slate-800 mb-6 font-medium"></div>
 
-            <div id="level-selection" class="flex flex-col gap-6 w-full max-w-3xl">
+            <div id="level-selection" class="flex flex-col gap-5 w-full max-w-2xl mx-auto">
                 <!-- Szkoła Podstawowa -->
-                <button data-level="SP" class="level-btn group relative bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-sm hover:shadow-md border border-slate-200 dark:border-slate-700 transition-all text-left overflow-hidden">
+                <button data-level="SP" class="level-btn group relative bg-white dark:bg-slate-800 p-6 md:p-8 rounded-3xl shadow-sm hover:shadow-md border border-slate-200 dark:border-slate-700 transition-all text-left overflow-hidden">
                     <div class="absolute inset-0 bg-emerald-50 dark:bg-emerald-900/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div>
-                            <span class="inline-block px-3 py-1 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 text-xs font-bold uppercase tracking-wider rounded-lg mb-4">Szkoła Podstawowa</span>
-                            <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-2">Egzamin Ósmoklasisty</h2>
-                            <p class="text-slate-500 dark:text-slate-400 text-sm">Lektury, motywy i zagadnienia do szkoły podstawowej.</p>
-                        </div>
-                        <div class="hidden md:flex flex-shrink-0 items-center justify-center w-12 h-12 rounded-full bg-slate-50 dark:bg-slate-700 group-hover:bg-emerald-500 group-hover:text-white transition-colors text-slate-400">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                        </div>
+                    <div class="relative z-10">
+                        <span class="inline-block px-3 py-1 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 text-xs font-bold uppercase tracking-wider rounded-lg mb-4">Szkoła Podstawowa</span>
+                        <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-2 flex items-center">
+                            <svg class="w-7 h-7 mr-3 text-red-700 dark:text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                            Egzamin Ósmoklasisty
+                        </h2>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm">Lektury, motywy i zagadnienia do szkoły podstawowej.</p>
                     </div>
                 </button>
 
-                <!-- Ponadpodstawowa: Podstawa i Rozszerzenie -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
-                    <button data-level="Podstawa" class="level-btn group relative bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-sm hover:shadow-md border border-slate-200 dark:border-slate-700 transition-all text-left overflow-hidden">
-                        <div class="absolute inset-0 bg-indigo-50 dark:bg-indigo-900/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        <div class="relative z-10">
-                            <span class="inline-block px-3 py-1 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 text-xs font-bold uppercase tracking-wider rounded-lg mb-4">Szkoła Ponadpodstawowa</span>
-                            <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-2">Matura Podstawowa</h2>
-                            <p class="text-slate-500 dark:text-slate-400 text-sm">Baza wiedzy i streszczenia na egzamin podstawowy.</p>
-                        </div>
-                    </button>
-                    
-                    <button data-level="Rozszerzenie" class="level-btn group relative bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-sm hover:shadow-md border border-slate-200 dark:border-slate-700 transition-all text-left overflow-hidden">
-                        <div class="absolute inset-0 bg-purple-50 dark:bg-purple-900/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        <div class="relative z-10">
-                            <span class="inline-block px-3 py-1 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 text-xs font-bold uppercase tracking-wider rounded-lg mb-4">Szkoła Ponadpodstawowa</span>
-                            <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-2">Matura Rozszerzona</h2>
-                            <p class="text-slate-500 dark:text-slate-400 text-sm">Zaawansowane analizy i materiały dla rozszerzenia.</p>
-                        </div>
-                    </button>
-                </div>
+                <!-- Matura Podstawa -->
+                <button data-level="Podstawa" class="level-btn group relative bg-white dark:bg-slate-800 p-6 md:p-8 rounded-3xl shadow-sm hover:shadow-md border border-slate-200 dark:border-slate-700 transition-all text-left overflow-hidden">
+                    <div class="absolute inset-0 bg-indigo-50 dark:bg-indigo-900/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="relative z-10">
+                        <span class="inline-block px-3 py-1 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 text-xs font-bold uppercase tracking-wider rounded-lg mb-4">Szkoła Ponadpodstawowa</span>
+                        <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-2 flex items-center">
+                            <svg class="w-7 h-7 mr-3 text-red-700 dark:text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            Matura Podstawowa
+                        </h2>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm">Baza wiedzy i streszczenia na egzamin podstawowy.</p>
+                    </div>
+                </button>
+                
+                <!-- Matura Rozszerzenie -->
+                <button data-level="Rozszerzenie" class="level-btn group relative bg-white dark:bg-slate-800 p-6 md:p-8 rounded-3xl shadow-sm hover:shadow-md border border-slate-200 dark:border-slate-700 transition-all text-left overflow-hidden">
+                    <div class="absolute inset-0 bg-purple-50 dark:bg-purple-900/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="relative z-10">
+                        <span class="inline-block px-3 py-1 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 text-xs font-bold uppercase tracking-wider rounded-lg mb-4">Szkoła Ponadpodstawowa</span>
+                        <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-2 flex items-center">
+                            <svg class="w-7 h-7 mr-3 text-red-700 dark:text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14v7"></path></svg>
+                            Matura Rozszerzona
+                        </h2>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm">Zaawansowane analizy i materiały dla rozszerzenia.</p>
+                    </div>
+                </button>
             </div>
 
             <div id="password-form" class="hidden w-full max-w-md bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700">
@@ -234,8 +232,8 @@
         <!-- ===== WIDOK 2: Siatka artykułów ===== -->
         <div id="home-view" class="hidden block">
             <header class="pt-16 pb-12 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto text-center relative w-full">
-                <div class="flex justify-between items-center w-full mb-8">
-                    <div class="flex items-center gap-4 relative z-10">
+                <div class="flex justify-between items-start w-full mb-8 min-h-[100px] md:min-h-[140px]">
+                    <div class="flex items-center gap-4 relative z-10 mt-2">
                         <button id="back-to-levels-btn" class="inline-flex items-center text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors font-medium">
                             <svg class="mr-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                             Zmień poziom
@@ -245,9 +243,8 @@
                             Wyloguj
                         </button>
                     </div>
-                    
-                    <div class="hidden sm:flex items-center justify-center absolute left-1/2 -translate-x-1/2">
-                        <div class="bg-white p-1.5 rounded-2xl shadow-sm border border-slate-100 w-14 h-14 flex items-center justify-center">
+                    <div class="flex items-center justify-center absolute left-1/2 -translate-x-1/2">
+                        <div class="bg-white p-2 rounded-2xl shadow-md border border-slate-100 w-24 h-24 md:w-32 md:h-32 flex items-center justify-center z-20">
                             <img src="logo.png" alt="TLW Korepetycje" class="w-full h-full object-contain rounded-xl">
                         </div>
                     </div>
@@ -297,8 +294,8 @@
                         Wróć
                     </button>
 
-                    <div class="hidden sm:flex items-center justify-center absolute left-1/2 -translate-x-1/2">
-                        <div class="bg-white p-1 rounded-xl shadow-sm border border-slate-100 w-10 h-10 flex items-center justify-center">
+                    <div class="flex items-center justify-center absolute left-1/2 -translate-x-1/2">
+                        <div class="bg-white p-1.5 rounded-xl shadow-sm border border-slate-100 w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center z-20">
                             <img src="logo.png" alt="TLW Korepetycje" class="w-full h-full object-contain rounded-lg">
                         </div>
                     </div>
@@ -340,7 +337,7 @@
         <p class="text-center text-slate-500 dark:text-slate-400 text-sm font-medium">&copy; 2026 Nauczyciel Języka Polskiego.</p>
     </footer>
 
-    <script src="app.js"></script>
+    <script src="app.js?v=2"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {

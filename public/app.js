@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let allPosts = [];
     let activeCategory = 'Wszystkie';
-    let activeSubcategory = 'Wszystkie';
+    let activeSubcategories = [];
     let currentLevel = '';
     let settingsData = null;
     let lastFetchedLevel = '';
@@ -328,11 +328,27 @@ document.addEventListener("DOMContentLoaded", () => {
         
         let title = '';
         let subtitle = '';
-        if (level === 'Podstawa') { title = 'Matura Podstawowa'; subtitle = 'Baza wiedzy i streszczenia na egzamin podstawowy.'; }
-        else if (level === 'Rozszerzenie') { title = 'Matura Rozszerzona'; subtitle = 'Zaawansowane analizy i materiały dla rozszerzenia.'; }
-        else if (level === 'SP') { title = 'Egzamin Ósmoklasisty'; subtitle = 'Lektury i zagadnienia do szkoły podstawowej.'; }
+        let icon = '';
         
-        if (heroTitle) heroTitle.textContent = title;
+        if (level === 'Podstawa') { 
+            title = 'Matura Podstawowa'; 
+            subtitle = 'Baza wiedzy i streszczenia na egzamin podstawowy.';
+            icon = `<svg class="w-10 h-10 md:w-12 md:h-12 mr-3 text-red-700 dark:text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>`;
+        }
+        else if (level === 'Rozszerzenie') { 
+            title = 'Matura Rozszerzona'; 
+            subtitle = 'Zaawansowane analizy i materiały dla rozszerzenia.';
+            icon = `<svg class="w-10 h-10 md:w-12 md:h-12 mr-3 text-red-700 dark:text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14v7"></path></svg>`;
+        }
+        else if (level === 'SP') { 
+            title = 'Egzamin Ósmoklasisty'; 
+            subtitle = 'Lektury i zagadnienia do szkoły podstawowej.';
+            icon = `<svg class="w-10 h-10 md:w-12 md:h-12 mr-3 text-red-700 dark:text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>`;
+        }
+        
+        if (heroTitle) {
+            heroTitle.innerHTML = `<span class="flex items-center justify-center">${icon}${title}</span>`;
+        }
         if (heroSubtitle) heroSubtitle.textContent = subtitle;
         if (searchInput) searchInput.value = '';
         fetchDataForLevel(level);
@@ -432,7 +448,7 @@ document.addEventListener("DOMContentLoaded", () => {
             btn.className = `${baseClass} ${name === activeCategory ? activeClass : inactiveClass}`;
             btn.addEventListener('click', () => {
                 activeCategory = name;
-                activeSubcategory = 'Wszystkie'; // Reset podkategorii przy zmianie głównej
+                activeSubcategories = []; // Reset podkategorii przy zmianie głównej
                 
                 Array.from(categoryTabs.children).forEach(c => {
                     c.className = `${baseClass} ${c.dataset.cat === activeCategory ? activeClass : inactiveClass}`;
@@ -490,7 +506,7 @@ document.addEventListener("DOMContentLoaded", () => {
             
             const color = tagColors[name] || 'indigo';
             const c = colorClasses[color] || colorClasses['indigo'];
-            const isActive = name === activeSubcategory;
+            const isActive = name === 'Wszystkie' ? activeSubcategories.length === 0 : activeSubcategories.includes(name);
             
             if (name === 'Wszystkie') {
                 const activeAllClass = 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 border-slate-900 dark:border-slate-100';
@@ -500,7 +516,15 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             btn.addEventListener('click', () => {
-                activeSubcategory = name;
+                if (name === 'Wszystkie') {
+                    activeSubcategories = [];
+                } else {
+                    if (activeSubcategories.includes(name)) {
+                        activeSubcategories = activeSubcategories.filter(t => t !== name);
+                    } else {
+                        activeSubcategories.push(name);
+                    }
+                }
                 renderSubcategoryTabs(posts);
                 filterPosts();
             });
@@ -521,9 +545,10 @@ document.addEventListener("DOMContentLoaded", () => {
             
             // Warunek podkategorii
             let matchesSubcategory = true;
-            if (!isFavTab && activeCategory !== 'Wszystkie' && activeSubcategory !== 'Wszystkie') {
+            if (!isFavTab && activeCategory !== 'Wszystkie' && activeSubcategories.length > 0) {
                 const cardTags = card.dataset.subcategory ? card.dataset.subcategory.split(',') : [];
-                matchesSubcategory = cardTags.includes(activeSubcategory);
+                // Musi posiadać wszystkie zaznaczone tagi
+                matchesSubcategory = activeSubcategories.every(sub => cardTags.includes(sub));
             }
 
             const matchesSearch = card.dataset.search.includes(query);
@@ -686,6 +711,17 @@ document.addEventListener("DOMContentLoaded", () => {
             badgesHtml += `<span class="ml-2 inline-block px-2.5 py-1 ${c.badgeBg} ${c.badgeText} rounded-md text-xs font-bold tracking-wider align-middle shadow-sm">${tag}</span>`;
         });
         
+        let levelIcon = '';
+        if (currentLevel === 'Podstawa') { 
+            levelIcon = `<svg class="w-8 h-8 md:w-10 md:h-10 text-red-700 dark:text-red-500 inline-block mr-3 shrink-0 align-middle" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>`;
+        }
+        else if (currentLevel === 'Rozszerzenie') { 
+            levelIcon = `<svg class="w-8 h-8 md:w-10 md:h-10 text-red-700 dark:text-red-500 inline-block mr-3 shrink-0 align-middle" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14v7"></path></svg>`;
+        }
+        else if (currentLevel === 'SP') { 
+            levelIcon = `<svg class="w-8 h-8 md:w-10 md:h-10 text-red-700 dark:text-red-500 inline-block mr-3 shrink-0 align-middle" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>`;
+        }
+        
         articleContent.innerHTML = `
             <div class="max-w-4xl mx-auto bg-white dark:bg-slate-900 p-8 sm:p-12 md:p-16 rounded-[2rem] shadow-sm dark:shadow-none border border-slate-200 dark:border-slate-800 mt-6 sm:mt-10 mb-20 relative z-10 transition-colors duration-300">
                 <header class="mb-10 text-center relative">
@@ -697,7 +733,10 @@ document.addEventListener("DOMContentLoaded", () => {
                         <span class="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">${cat}</span>
                         ${badgesHtml}
                     </div>
-                    <h1 class="text-4xl md:text-5xl font-bold font-serif text-slate-900 dark:text-white mt-4 mb-6 leading-tight">${post.title}</h1>
+                    <h1 class="text-4xl md:text-5xl font-bold font-serif text-slate-900 dark:text-white mt-4 mb-6 leading-tight flex items-center justify-center text-center">
+                        ${levelIcon}
+                        ${post.title}
+                    </h1>
                     <div class="flex justify-center items-center text-slate-500 dark:text-slate-400 text-sm font-medium">
                         <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         ${time}
